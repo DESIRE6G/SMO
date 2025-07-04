@@ -50,7 +50,6 @@ services:
       - INPUT_TOPIC=input_topic
       - OUTPUT_TOPIC=output_topic
       - KAFKA_BOOTSTRAP_SERVERS=localhost
-      - SITE=SITEID1
       - TOPOLOGY_MODULE_HOST=smo-topology
       - TOPOLOGY_MODULE_PORT=8000
       - SERVICE_CATALOG_HOST=smo-service-catalog

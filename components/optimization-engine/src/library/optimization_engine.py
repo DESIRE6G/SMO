@@ -1,4 +1,5 @@
-# Optimization Engine Module Core Flow
+# Optimization Engine Module Core Flow 
+# Anestis Dalgkitsis | v6.0
 
 # Python Modules
 import json
@@ -36,67 +37,53 @@ selectors = {
     "intelligence.py": {"enabled": False},
 }
 
-def optimization_engine(data, d6g_site):
+def optimization_engine(data):
 
-    # Fetch VNF data from Service Catalog
-    logger.info("Fetching functions information from the Service Catalog module...")
-    # TODO: Do we really want to have a hardcoded graph name here?
-    function_info = functions.fetch_service_catalog_info(funtions_graph_name = "apps.nf.yaml", data = data)
-    if function_info is None:
-        logger.info("Error: Failed to fetch function information, check configuration.")
-        error_payload = {"Error": "Failed to fetch function information, check configuration."}
-        return json.dumps(error_payload).encode('utf-8')
-    else:
-        logger.info("Function information fetched successfully from the Service Catalog module.")
-
-    function_info = yaml.safe_load(function_info)
-    # Fetch topology from Topology Module
-    logger.info("Fetching topology from Topology module...")
-    topologyGraph, domains, site_resources = topology.fetch_d6g_site_info(d6g_site)
+    # TOPOLOGY SNAPSHOT
+    topologyGraph, domains, site_resources = topology.topology_snapshot()
     if topologyGraph is None:
-        logger.info("Error: Failed to fetch topology, check configuration.")
+        logger.info("❌ Error: Failed to fetch topology, check configuration.")
         error_payload = {"Error": "Failed to fetch topology, check configuration."}
         return json.dumps(error_payload).encode('utf-8')
     else:
-        logger.info("Topology fetched successfully from Topology module.")
+        logger.info("Topology snapshot loaded successfully from Topology module.")
     if domains is None:
-        logger.info("Error: Failed to fetch domains, check configuration.")
+        logger.info("❌ Error: Failed to fetch domains, check configuration.")
         error_payload = {"Error": "Failed to fetch domains, check configuration."}
         return json.dumps(error_payload).encode('utf-8')
-    # Fetch topology resources from monitoring (Disabled for now)
-    # logger.info("Fetching topology resources from monitoring module...")
-    # topology_resources = monitoring.fetchTopologyResources(d6g_site)
-    # logger.info("Topology resources fetched successfully from monitoring module.")
-
+    
+    # TRANSLATION (External to Internal)
     # Translate NSD to internal structure
     logger.info("Translating service request to internal graph...")
-    serviceGraph, decorations = translator.request2graph(data, function_info)
+    serviceGraph, decorations, function_info = translator.request2graph(data)
     if serviceGraph is None:
-        logger.info("Error: Failed to translate service request, check syntax.")
+        logger.info("❌ Error: Failed to translate service request, check syntax.")
         error_payload = {"Error": "Failed to translate service request, check syntax."}
         return json.dumps(error_payload).encode('utf-8')
     else:
-        logger.info("Service request decoded successfully.")
+        logger.info("💡 Service request decoded successfully.")
 
-    # Check for local D6G site resource availability
-    logger.info("Checking resource availability...")
+    # RESOURCE AVAILABILITY CHECK
+
+    # Check for resource availability on all registered Desire6G sites
     if monitoring.check_resources(function_info, site_resources):
-        logger.info("Ok: There are enough resources to host the service in the current region.")
+        logger.info("💡 There are enough resources to host the service.")
     else:
-        logger.info("Failed: The local region does not have enough resources to host the service.")
-        error_payload = {"Failed": "The local region does not have enough resources to host the service. Relaying service request to the next region."}
+        logger.info("❌ Failed: Not enough resources to host the service.")
+        error_payload = {"Failed": "Not enough resources to host the service."}
         return json.dumps(error_payload).encode('utf-8')
     
+    # Check if only one site (partitioning not possible)
     logger.info("Checking if there is only one D6G node in the site...")
-    # Check if only one D6G node in site, if yes forward the request to back to the local SO
     if domains == 1:
-        logger.info("Success: There is only one D6G node in the site. Forwarding request to the local SO.")
-        # Decode bytes to string if data is in bytes format
-        if isinstance(data, bytes):
+        logger.info("✉️ Success: There is only one D6G node in the site. Forwarding request to the Service Orchestrator.")
+        if isinstance(data, bytes): # Decode bytes to string if data is in bytes format
             data = data.decode('utf-8')
         return json.dumps(data).encode('utf-8')
 
-    # Route to enabled autoselector from Selector Pool
+    # OPTIMIZATION PIPELINE
+    
+    # Route autoselector
     pick = random_selection.spinwheel(algorithms)
     logger.info("Model Selector: " + str(pick))
 
@@ -110,7 +97,7 @@ def optimization_engine(data, d6g_site):
         elif pick == "greedysplit.py":
             subgraphs = greedysplit.greedysplit(serviceGraph, topologyGraph, domains)
         else:
-            logger.info("Error: Unknown model selected, check Model Pool configuration.")
+            logger.info("❌ Error: Unknown model selected, check Model Pool configuration.")
             error_payload = "Error: Unknown model selected, check Model Pool configuration."
             return json.dumps(error_payload).encode('utf-8')
     except Exception as e:
@@ -120,38 +107,40 @@ def optimization_engine(data, d6g_site):
     
     # Verify if partitioning was successfull
     if subgraphs is None or subgraphs == []:
-        logger.info("Error: Unknown partitioning error.")
+        logger.info("❌ Error: Unknown partitioning error.")
     elif subgraphs == -1:
         logger.info("Service partitioning has failed, not enough resources to allocate.")
         error_payload = {"Failed": "Service partitioning has failed, not enough resources to allocate."}
         return json.dumps(error_payload).encode('utf-8')
     else:
-        logger.info("Partitioning executed successfully. Count: " + str(len(subgraphs)) + " subgraphs: " + str(subgraphs))
+        logger.info("✅ Partitioning executed successfully. Count: " + str(len(subgraphs)) + " subgraphs: " + str(subgraphs))
 
+    # TRANSLATION (Internal to External)
     # Translate internal structure to YAML for SO
     encoded_subgraphs = []
     for subgraph in subgraphs:
         encoded_subgraph = translator.graph2request(subgraph, data)
         if encoded_subgraph is None:
-            logger.info("Error: Failed to encode subgraph, check syntax: " + str(subgraph))
+            logger.info("❌ Error: Failed to encode subgraph, check syntax: " + str(subgraph))
             error_payload = {"Error": "Failed to encode subgraph, check syntax: " + str(subgraph)}
             return json.dumps(error_payload).encode('utf-8')
         else:
             encoded_subgraphs.append(encoded_subgraph)
-            logger.info("Subgraph encoded successfully.")
+            logger.info("💡 Subgraph encoded successfully.")
     logger.info("Combined subgraphs encoded successfully.")
 
-    # Combine Response
+    # RETURN OPTIMIZED REQUEST
+    # Combine partitioned requests for each site
     try:
         combined_response = []
         for domain in range(0, domains-1):
             combined_response.append({f"s{domain+1}e": encoded_subgraphs[domain], "site_id": f"SITEID{domain+1}"})
-        logger.info("Combined response ready.")
+        logger.info("💡 Subgraphs combined successfully.")
     except Exception as e:
-        logger.exception("An error occurred while combining the response: %s", e)
+        logger.exception("❌ Error: An error occurred while combining the response: %s", e)
         error_payload = {"Error": "An error occurred while combining the response: " + str(e)}
         return json.dumps(error_payload).encode('utf-8')
 
-    # Return Partitioned Request
-    logger.info("Returning optimized service request.")
+    # Return optimized service request
+    logger.info("✉️ Optimized request dispatched to the Service Orchestrator.")
     return json.dumps(combined_response).encode('utf-8')
