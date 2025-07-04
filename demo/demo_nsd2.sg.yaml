@@ -1,12 +1,11 @@
 lnsd:
-  ## lnsd refers to a network service graph whose subgraph is described
   ns-instance-id: "11223344-e2a8-4338-bc8c-be685548bad2" 
   ns:
     name: "Digital Twin Demo"
-    id: "418420e3-e2a8-4338-bc8c-be685548bad2" # refers to the ns in the service catalog
+    id: "418420e3-e2a8-4338-bc8c-be685548bad2"
     vendor: "D6G"
     descriptor-version: "1.0"
-    site-id: "d6g-001"
+    site-id: "SITEID1"
     network-functions:
       - nf-instance-id: "firewall-i01"
         nf-id: "firewall"
@@ -102,7 +101,7 @@ lnsd:
       - site-connection-id: "sc1-sc4"
         site-id-ref: "d6g-004"
     forwarding_graphs:
-      - member-graph-index: 1 # list of subgraphs/forwarding segments implemented by the given D6G site
+      - member-graph-index: 1
         graph-name: "uplink"
         links:
           - id: "input-1"
