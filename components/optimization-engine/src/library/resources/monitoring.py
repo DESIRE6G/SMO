@@ -7,6 +7,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def check_resources(merged_functions, site_resources):
+    # TODO: THIS NEEDS TO BE UPDATED TO THE NEW merged_functions, site_resources FORMATS
     logger.info("Starting resource check with site_resources type: %s", type(site_resources))
     logger.info("site_resources content: %s", site_resources)
 
@@ -40,21 +41,6 @@ def check_resources(merged_functions, site_resources):
             total_required_vcpu += int(func.get("nf-vcpu", 0))
             total_required_ram += int(func.get("nf-memory", 0))
             total_required_storage += int(func.get("nf-storage", 0))
-    logger.info("TODO: Remove this log")
-    # Calculate total available resources from site resources.
-    # total_available_vcpu = 0
-    # total_available_ram = 0
-    # total_available_storage = 0
-
-    # site_resources_list = site_resources.get("site-resources", [])
-    # for site in site_resources_list:
-    #     if not isinstance(site, dict):
-    #         # Log error and skip if the item is not a dictionary.
-    #         logger.error("Expected site to be a dictionary but got %s: %s", type(site), site)
-    #         continue
-    #     total_available_vcpu += int(site.get("site-available-vcpu", 0))
-    #     total_available_ram += int(site.get("site-available-ram", 0))
-    #     total_available_storage += int(site.get("site-available-storage", 0))
 
     try:
         logger.info("Using site data: %s", site_data)

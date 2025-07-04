@@ -1,24 +1,25 @@
-# Mock Demo2 Service Catalog for development
-import time
+# Service Catalog Module Interface
+# Anestis Dalgkitsis | v2
+
 import logging
 import requests
 import yaml
-import json
 import library.config as config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-def fetch_service_catalog_info(funtions_graph_name = "apps", data = None):
+    
+def service_catalog_snapshot():
     try:
-        url = f'http://{config.SERVICE_CATALOG_HOST}:{config.SERVICE_CATALOG_PORT}/retrieve/{funtions_graph_name}'
+        url = f'http://{config.SERVICE_CATALOG_HOST}:{config.SERVICE_CATALOG_PORT}/retrieve/'
         headers = {'accept': 'application/json'}
         
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raise an exception for bad status codes
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status() 
 
-        # Parse the JSON response into dictionary
-        functions_info = response.json()
+        payload = response.json()
+        
+
         logger.info(f"Received from SC -> {functions_info}")
         return functions_info["file_content"] if "file_content" in functions_info else None
     except requests.RequestException as e:
