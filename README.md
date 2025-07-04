@@ -153,19 +153,19 @@ curl -X 'POST' \
 
 ### Step 4: Deploy Service to Service Orchestrator
 
-Deploy the Service Graph to the Service Orchestrator. This should fail since `desire6g-site` is not
-a site we have added to the Topology module.
+Deploy the Service Graph to the Service Orchestrator. 
+<!-- This should fail since `desire6g-site` is not a site we have added to the Topology module. -->
 
-```terminal
+<!-- ```terminal
 $ SO_ENDPOINT=localhost:8000
 $ curl -X 'POST' \
 "http://$SO_ENDPOINT/services" \
 -H 'Content-Type: application/json' \
 -d '{"name": "demo_nsd2.sg.yaml"}'
 {"detail":"Site not found"}
-```
+``` -->
 
-Let's try again with an existing site:
+<!-- Let's try again with an existing site: -->
 
 ```terminal
 $ SO_ENDPOINT=localhost:8000
