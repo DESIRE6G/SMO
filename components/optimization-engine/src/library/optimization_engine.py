@@ -37,6 +37,7 @@ selectors = {
 }
 
 def optimization_engine(data):
+    logger.info("📩 New request received from Service Orchestrator.")
 
     # TOPOLOGY SNAPSHOT
     topologyGraph, domains, site_resources = topology.topology_snapshot()
@@ -67,7 +68,7 @@ def optimization_engine(data):
     if monitoring.check_resources(function_info, site_resources):
         logger.info("💡 There are enough resources to host the service.")
     else:
-        logger.info("❌ Failed: Not enough resources to host the service.")
+        logger.info("✉️  Not enough resources to host the service. Notifying Service Orchestrator.")
         error_payload = {"Failed": "Not enough resources to host the service."}
         return json.dumps(error_payload).encode('utf-8')
     
@@ -83,7 +84,7 @@ def optimization_engine(data):
     
     # Route autoselector
     pick = random_selection.spinwheel(algorithms)
-    logger.info("Model Selector: " + str(pick))
+    logger.info("🎯 Model Selector: " + str(pick))
 
     # Route to selected Model from the Model Pool
     subgraphs = []

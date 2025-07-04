@@ -161,7 +161,7 @@ $ SO_ENDPOINT=localhost:8000
 $ curl -X 'POST' \
 "http://$SO_ENDPOINT/services" \
 -H 'Content-Type: application/json' \
--d '{"name": "demo_nsd1.sg.yaml", "site_id": "desire6g-site"}'
+-d '{"name": "demo_nsd2.sg.yaml", "site_id": "desire6g-site"}'
 {"detail":"Site not found"}
 ```
 
@@ -172,7 +172,7 @@ $ SO_ENDPOINT=localhost:8000
 $ curl -X 'POST' \
 "http://$SO_ENDPOINT/services" \
 -H 'Content-Type: application/json' \
--d '{"name": "demo_nsd1.sg.yaml", "site_id": "SITEID1"}'
+-d '{"name": "demo_nsd2.sg.yaml", "site_id": "SITEID1"}'
 {"message":"Failure in Optimization Engine","status":"failed","error":"Optimization Engine failure: The local region does not have enough resources to host the service. Relaying service request to the next region."}
 ```
 
@@ -183,11 +183,11 @@ $ SO_ENDPOINT=localhost:8000
 $ curl -X 'POST' \
 "http://$SO_ENDPOINT/services" \
 -H 'Content-Type: application/json' \
--d '{"name": "demo_nsd1.sg.yaml", "site_id": "SITEID3"}' | jq
+-d '{"name": "demo_nsd2.sg.yaml", "site_id": "SITEID3"}' | jq
 {
   "message": "Failed to deploy service to IML",
   "status": "failed",
-  "service_name": "demo_nsd1.sg.yaml",
+  "service_name": "demo_nsd2.sg.yaml",
   "site_id": "SITEID3",
   "iml_endpoint": "iml.siteid3.com",
   "requested_service": {
