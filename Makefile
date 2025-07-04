@@ -27,12 +27,17 @@ oe:
 topology:
 	$(CONTAINER_TOOL) build $(PUSH_FLAG) -t $(IMAGE_PREFIX)desire6g-topology:$(TAG) -f components/topology/Dockerfile components/topology
 
-images: so sc oe topology
+mlfo:
+	$(CONTAINER_TOOL) build $(PUSH_FLAG) -t $(IMAGE_PREFIX)desire6g-mlfo:$(TAG) -f components/mlfo/Dockerfile components/mlfo
+
+
+images: so sc oe topology mlfo
 	@echo "Images built successfully:"
 	@echo "- $(IMAGE_PREFIX)desire6g-so:$(TAG)"
 	@echo "- $(IMAGE_PREFIX)desire6g-service-catalog:$(TAG)"
 	@echo "- $(IMAGE_PREFIX)desire6g-oe:$(TAG)"
 	@echo "- $(IMAGE_PREFIX)desire6g-topology:$(TAG)"
+	@echo "- $(IMAGE_PREFIX)desire6g-mlfo:$(TAG)"
 	@if [ -n "$(REGISTRY)" ]; then echo "Images pushed to: $(REGISTRY)"; else echo "Note: Images were not pushed (REGISTRY is unset)"; fi
 
 deploy:
