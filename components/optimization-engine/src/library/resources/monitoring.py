@@ -7,9 +7,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def check_resources(merged_functions, site_resources):
-    # TODO: THIS NEEDS TO BE UPDATED TO THE NEW merged_functions, site_resources FORMATS
-    logger.info("Starting resource check with site_resources type: %s", type(site_resources))
-    logger.info("site_resources content: %s", site_resources)
+    logger.info("Starting resource check with site_resources content: %s", site_resources)
 
     # Handle both formats: single site dict or wrapped in site-resources
     if isinstance(site_resources, dict):

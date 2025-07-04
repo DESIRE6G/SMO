@@ -41,7 +41,7 @@ def topology_snapshot():
             G.add_node(site_id, **site_data[site_id])
 
         sites = len(site_data)
-        logger.info("💡 Successfully retrieved %d sites from topology module", sites)
+        logger.info("💡 Retrieved %d sites from topology module", sites)
         return G, sites, site_data
     
     # Error handling
