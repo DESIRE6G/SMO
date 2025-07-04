@@ -68,14 +68,14 @@ def optimization_engine(data):
     if monitoring.check_resources(function_info, site_resources):
         logger.info("💡 There are enough resources to host the service.")
     else:
-        logger.info("✉️  Not enough resources to host the service. Notifying Service Orchestrator.")
+        logger.info("✉️ Not enough resources to host the service. Notifying Service Orchestrator.")
         error_payload = {"Failed": "Not enough resources to host the service."}
         return json.dumps(error_payload).encode('utf-8')
     
     # Check if only one site (partitioning not possible)
-    logger.info("Checking if there is only one D6G node in the site...")
+    # logger.info("Checking if there is only one D6G node in the site...")
     if domains == 1:
-        logger.info("✉️ Success: There is only one D6G node in the site. Forwarding request to the Service Orchestrator.")
+        logger.info("✉️ Success: Forwarding request to the SO.")
         if isinstance(data, bytes): # Decode bytes to string if data is in bytes format
             data = data.decode('utf-8')
         return json.dumps(data).encode('utf-8')
