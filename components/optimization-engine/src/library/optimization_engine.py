@@ -61,7 +61,7 @@ def optimization_engine(data):
         error_payload = {"Error": "Failed to translate service request, check syntax."}
         return json.dumps(error_payload).encode('utf-8')
     else:
-        logger.info("💡 Service request decoded successfully.")
+        logger.info("💡 Service request decoded.")
 
     # RESOURCE AVAILABILITY CHECK
 
