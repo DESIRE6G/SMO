@@ -220,3 +220,27 @@ curl -X 'GET' \
 "http://$SO_ENDPOINT/requests" \
 -H 'accept: application/json'
 ```
+
+---
+
+### Step 5: Trigger error (received from MAS->MLFO)
+
+
+Check if MLFO is running:
+
+```bash
+curl -X 'GET' http://localhost:8004
+```
+
+Simulate error sent from MAS to MLFO (error code 1001 refers to application function for a given service_id is not running properly due to resource saturation):
+
+```bash
+curl -X 'POST' \
+http://localhost:8004/process_error \
+-H "Content-Type: application/json" \
+-d '{
+"agent_id":"agent_1",
+"service_id":"dt-service-id",
+"error_code":1001
+}'
+```
