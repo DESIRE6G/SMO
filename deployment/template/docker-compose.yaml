@@ -58,6 +58,18 @@ services:
     depends_on:
       - smo-rabbitmq
     restart: unless-stopped
+  smo-mlfo:
+    image: IMAGE_PREFIXdesire6g-mlfo:DEFAULTTAG
+    container_name: smo-mlfo
+    environment:
+      - SO_TOPIC=output_topic
+      - RABBITMQ_HOST=smo-rabbitmq
+      - RABBITMQ_PORT=5672
+    depends_on:
+      - smo-rabbitmq
+    restart: unless-stopped
+    ports:
+      - 8004:8000
 
 networks:
   default:
