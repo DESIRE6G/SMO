@@ -26,11 +26,11 @@ def check_resources(merged_functions, site_resources):
     total_required_ram = 0
     total_required_storage = 0
 
-    logger.info("Merged functions content: %s", merged_functions)
+    # logger.info("Merged functions content: %s", merged_functions)
     
     # Handle merged_functions as a dictionary where each key maps to a function dict
     for key, func_info in merged_functions.items():
-        logger.info("Processing key: %s with function info: %s", key, func_info)
+        # logger.info("Processing key: %s with function info: %s", key, func_info)
         if not isinstance(func_info, dict):
             logger.info("Warning: Expected %s to be a dict, got %s. Skipping.", key, type(func_info))
             continue
@@ -41,7 +41,7 @@ def check_resources(merged_functions, site_resources):
         total_required_storage += int(func_info.get("storage", 0))
 
     try:
-        logger.info("Using site data: %s", site_data)
+        # logger.info("Using site data: %s", site_data)
         
         # Handle the nested structure where site_data contains site IDs as keys
         if len(site_data) == 1:
