@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+requests
+pydantic
+pydantic-settings
+httpx
+requests
+psutil
+pika
+PyYAML>=6.0
