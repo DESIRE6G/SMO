@@ -19,7 +19,6 @@ import library.model_pool.greedysplit as greedysplit
 # Demo Data
 import library.resources.topology as topology
 import library.resources.monitoring as monitoring
-import library.resources.functions as functions
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -54,14 +53,13 @@ def optimization_engine(data):
     
     # TRANSLATION (External to Internal)
     # Translate NSD to internal structure
-    logger.info("Translating service request to internal graph...")
     serviceGraph, decorations, function_info = translator.request2graph(data)
     if serviceGraph is None:
         logger.info("❌ Error: Failed to translate service request, check syntax.")
         error_payload = {"Error": "Failed to translate service request, check syntax."}
         return json.dumps(error_payload).encode('utf-8')
     else:
-        logger.info("💡 Service request decoded.")
+        logger.info("💡 Service request translated to internal graph.")
 
     # RESOURCE AVAILABILITY CHECK
 
