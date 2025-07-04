@@ -50,7 +50,7 @@ def _extract_nsd(payload: dict) -> dict:
 def request2graph(service):
     try:
         service = service2dict(service)          # caller-supplied helper
-        logger.info("Service content: %s", service)
+        # logger.info("Service content: %s", service)
 
         # --------- Locate the NSD we need to parse ---------- #
         nsd = _extract_nsd(service)
@@ -101,11 +101,11 @@ def request2graph(service):
 
                 if node1_id in G and node2_id in G:
                     G.add_edge(node1_id, node2_id, link_id=link.get("id"))
-                else:
-                    logger.info(
-                        "Skipping edge for link '%s': '%s' or '%s' not found.",
-                        link.get("id", "unknown"), node1_id, node2_id
-                    )
+                # else:
+                #     logger.info(
+                #         "Skipping edge for link '%s': '%s' or '%s' not found.",
+                #         link.get("id", "unknown"), node1_id, node2_id
+                #     )
 
         # ------------- Decorations (everything else) -------- #
         decorations = {
@@ -113,7 +113,7 @@ def request2graph(service):
             if k not in ("network-functions", "application-functions", "forwarding_graphs")
         }
 
-        logger.info("function_info collected: %s", function_info)
+        # logger.info("function_info collected: %s", function_info)
         return G, decorations, function_info
 
     except Exception as e:
