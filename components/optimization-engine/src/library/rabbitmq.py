@@ -5,7 +5,7 @@ import os
 import yaml
 import logging
 from aio_pika import connect, IncomingMessage, ExchangeType, Message
-from .config import rabbitmq_host, input_topic, output_topic, d6g_site
+from .config import rabbitmq_host, input_topic, output_topic
 import base64
 
 # Functionality
@@ -35,7 +35,7 @@ async def process_message(message: IncomingMessage, message_counter):
 
         # ----- Service Request -----
 
-        modified_message = optimization_engine.optimization_engine(message.body, d6g_site)
+        modified_message = optimization_engine.optimization_engine(message.body)
         logger.info("Optimization Engine returned a modified service request.")
         if modified_message == -1:
             logger.error(f"Optimization Engine returned an error. Error during optimization pipeline.")
