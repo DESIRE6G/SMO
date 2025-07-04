@@ -176,9 +176,6 @@ $ curl -X 'POST' \
 {"message":"Failure in Optimization Engine","status":"failed","error":"Optimization Engine failure: The local region does not have enough resources to host the service. Relaying service request to the next region."}
 ```
 
-As of writing this, the Optimization Engine doesn't accound for requested site_id. The only way to change that
-is to instantiate the Optimization Engine with a different `SITE` ENV variable.
-
 If we do that, we can now see the response when the Site has the required resources:
 
 ```terminal

@@ -1,6 +1,5 @@
 # Two-way JSON/YAML to NetworkX translation
-# Port from Dr. Anestis Dalgkitsis work
-# v2.1
+# Anestis Dalgkitsis | v3.1
 
 import networkx as nx
 import yaml
@@ -34,91 +33,96 @@ def service2dict(service: bytes | str):
         pass
     raise ValueError("Data is not valid JSON or YAML format.")
     
-def request2graph(service, functions):       
+def request2graph(service):
+    """
+    Convert a service request (NS-D/YAML dict) into:
+        * a NetworkX graph of NFs/AFs with link edges
+        * a `decorations` dict (NS-level metadata, unchanged)
+        * a `function_info` dict with CPU / RAM / storage requirements
+    """
     try:
-        service = service2dict(service)
-        # If the service is wrapped under a key (like "lnsd"), extract it.
+        service = service2dict(service)          # caller-supplied helper
         logger.info("Service content: %s", service)
-        
+
+        # If the service is wrapped in one top-level key (e.g. "lnsd"), unwrap it.
         nsd = service.get("local-nsd", service)
-        
-        # Create an empty undirected graph.
+
         G = nx.Graph()
-        
-        # Extract nodes from network-functions and application-functions.
+        function_info = {}                       # <-- NEW
+
+        # Extract node lists.
         network_functions = nsd.get("network-functions", [])
         application_functions = nsd.get("application-functions", [])
 
-        # Function info Lookups.
-        # additional_nf = {
-        #     nf.get("nf-instance-id"): nf 
-        #     for nf in functions.get("network-functions", []) if nf.get("nf-instance-id")
-        # }
-        # additional_af = {
-        #     af.get("af-instance-id"): af 
-        #     for af in functions.get("application-functions", []) if af.get("af-instance-id")
-        # }
-        
-        # Add network function nodes.
+        # --- Add network-function nodes and collect resource data -------
         for nf in network_functions:
             node_id = nf.get("nf-instance-id")
-            if node_id:
-                # node_data = nf.copy()
-                # if node_id in additional_nf:
-                #     node_data = merge_missing(node_data, additional_nf[node_id])
-                # G.add_node(node_id, **node_data)
-                G.add_node(node_id, **nf)
-                logger.info("nf node added in graph:': %s", node_id)
-                # logger.info("nf node added in graph:': %s: %s", node_id, node_data)
-            else:
+            if not node_id:
                 logger.info("Network function missing 'nf-instance-id': %s", nf)
-        
-        # Add application function nodes.
+                continue
+
+            # Add the node to the graph.
+            G.add_node(node_id, **nf)
+            logger.info("nf node added in graph: %s", node_id)
+
+            # Record resource requirements.
+            function_info[node_id] = {
+                "cpu": nf.get("nf-vcpu"),
+                "ram": nf.get("nf-memory"),
+                "storage": nf.get("nf-storage"),
+                "type": "network",
+            }
+
+        # --- Add application-function nodes and collect resource data ---
         for af in application_functions:
             node_id = af.get("af-instance-id")
-            if node_id:
-                # node_data = af.copy()
-                # if node_id in additional_af:
-                #     node_data = merge_missing(node_data, additional_af[node_id])
-                # G.add_node(node_id, **node_data)
-                G.add_node(node_id, **af)
-                logger.info("af node added in graph:': %s", node_id)
-                # logger.info("af node added in graph:': %s: %s", node_id, node_data)
-            else:
+            if not node_id:
                 logger.info("Application function missing 'af-instance-id': %s", af)
-        
-        # Process forwarding_graphs to add edges between nodes.
+                continue
+
+            G.add_node(node_id, **af)
+            logger.info("af node added in graph: %s", node_id)
+
+            function_info[node_id] = {
+                "cpu": af.get("af-vcpu"),
+                "ram": af.get("af-memory"),
+                "storage": af.get("af-storage"),
+                "type": "application",
+            }
+
+        # --- Build edges from forwarding graphs ------------------------
         forwarding_graphs = nsd.get("forwarding_graphs", [])
         for fg in forwarding_graphs:
-            links = fg.get("links", [])
-            for link in links:
-                connection_points = link.get("connection-points", [])
-                if len(connection_points) < 2:
-                    logger.info("Link '%s' has less than 2 connection points.", link.get("link-id", "unknown"))
+            for link in fg.get("links", []):
+                cps = link.get("connection-points", [])
+                if len(cps) < 2:
+                    logger.info("Link '%s' has fewer than 2 CPs.", link.get("id", "unknown"))
                     continue
-                # Extract the first two connection points.
-                cp1 = connection_points[0]
-                cp2 = connection_points[1]
-                # Extract node identifiers by splitting on ':'.
-                ref1 = cp1.get("member-if-id-ref", "")
-                ref2 = cp2.get("member-if-id-ref", "")
+
+                ref1 = cps[0].get("member-if-id-ref", "")
+                ref2 = cps[1].get("member-if-id-ref", "")
                 node1_id = ref1.split(":")[0] if ref1 else None
                 node2_id = ref2.split(":")[0] if ref2 else None
-                
-                # Check if both nodes exist in the graph before adding the edge.
-                if node1_id in G.nodes and node2_id in G.nodes:
-                    G.add_edge(node1_id, node2_id, link_id=link.get("link-id"))
-                else:
-                    logger.info("Skipping edge for link '%s': Node '%s' or '%s' not found in functions.", link.get("link-id", "unknown"), node1_id, node2_id)
-        
-        # Store the rest of the information as decorations.
-        decorations = {key: value for key, value in nsd.items() if key not in ["network-functions", "application-functions", "forwarding_graphs"]}
 
-        return G, decorations
-    
+                if node1_id in G and node2_id in G:
+                    G.add_edge(node1_id, node2_id, link_id=link.get("id"))
+                else:
+                    logger.info(
+                        "Skipping edge for link '%s': '%s' or '%s' not found.",
+                        link.get("id", "unknown"), node1_id, node2_id
+                    )
+
+        # --- Any remaining NS-level keys become decorations -------------
+        decorations = {
+            k: v for k, v in nsd.items()
+            if k not in ("network-functions", "application-functions", "forwarding_graphs")
+        }
+
+        return G, decorations, function_info
+
     except Exception as e:
-        logger.info("Error in request2graph: %s", e)
-        return None, None
+        logger.exception("Error in request2graph: %s", e)
+        return None, None, None
     
 def graph2request(graph, data={}):
     nsd = None
