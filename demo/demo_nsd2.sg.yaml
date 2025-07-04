@@ -8,33 +8,9 @@ lnsd:
     descriptor-version: "1.0"
     site-id: "d6g-001"
     network-functions:
-      - nf-instance-id: "flowcl-i01" #Alternatively: member-vnf-index: 1
-        nf-id: "flowcl"
-        nf-name: "Flow Classifier"
-        nf-version: "v1.0"
-        nf-mgmt-network: "shared-mgmt-net" # interconnects data plane and control plane entities, and provides access to higher level controllers
-        nf-vcpu: 1
-        nf-memory: 1
-        nf-storage: 1
       - nf-instance-id: "firewall-i01"
         nf-id: "firewall"
         nf-name: "ACL Firewall"
-        nf-version: "v1.0"
-        nf-mgmt-network: "shared-mgmt-net"
-        nf-vcpu: 1
-        nf-memory: 1
-        nf-storage: 1
-      - nf-instance-id: "nat-i01"
-        nf-id: "nat"
-        nf-name: "NAT"
-        nf-version: "v1.0"
-        nf-mgmt-network: "shared-mgmt-net"
-        nf-vcpu: 1
-        nf-memory: 1
-        nf-storage: 1
-      - nf-instance-id: "dpi-i01"
-        nf-id: "dpi"
-        nf-name: "DPI Middlebox"
         nf-version: "v1.0"
         nf-mgmt-network: "shared-mgmt-net"
         nf-vcpu: 1
@@ -94,7 +70,7 @@ lnsd:
         af-name: "Digital Twin Replica"
         af-version: "1.0"
         af-mgmt-network: "shared-mgmt-net"
-        af-vcpu: 8
+        af-vcpu: 2
         af-memory: 8
         af-storage: 10
       - af-instance-id: "dt-go1-monitoring-edge"
