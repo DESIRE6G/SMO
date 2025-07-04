@@ -42,7 +42,7 @@ def request2graph(service):
     """
     try:
         service = service2dict(service)          # caller-supplied helper
-        logger.info("Service content: %s", service)
+        # logger.info("Service content: %s", service)
 
         # If the service is wrapped in one top-level key (e.g. "lnsd"), unwrap it.
         nsd = service.get("local-nsd", service)
@@ -72,6 +72,7 @@ def request2graph(service):
                 "storage": nf.get("nf-storage"),
                 "type": "network",
             }
+            logger.info("function_info-nf: %s", function_info)
 
         # --- Add application-function nodes and collect resource data ---
         for af in application_functions:
@@ -89,6 +90,7 @@ def request2graph(service):
                 "storage": af.get("af-storage"),
                 "type": "application",
             }
+            logger.info("function_info-af: %s", function_info)
 
         # --- Build edges from forwarding graphs ------------------------
         forwarding_graphs = nsd.get("forwarding_graphs", [])
@@ -118,6 +120,8 @@ def request2graph(service):
             if k not in ("network-functions", "application-functions", "forwarding_graphs")
         }
 
+        logger.info("decorations: %s", decorations)
+        logger.info("function_info: %s", function_info)
         return G, decorations, function_info
 
     except Exception as e:
