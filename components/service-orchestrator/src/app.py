@@ -59,18 +59,8 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
 
     await client.send_message(base64.b64encode(file_content.encode()))
 
-    # site_id = service_request.site_id
-    # Check if the site exists in the topology component
-    # response = requests.get(f"{TOPOLOGY_MODULE_URL}/nodes/{site_id}")
-    # if response.status_code != 200:
-    #     raise HTTPException(status_code=response.status_code,
-    #                         detail="Site not found")
-    # site_dict = response.json()
-    # if "iml_endpoint" in site_dict:
-    #     iml_endpoint = site_dict["iml_endpoint"]
-    # else:
-    print("IML endpoint not found in the site dictionary, using default.")
-    iml_endpoint = "http://localhost:5000"  # Default value if not found
+    #iml_endpoint = "http://localhost:5000"  # Default value if not found
+    #site_id = service_request.site_id
 
     response_content = await client.receive_message()
     response_content=interpret_message(response_content)
@@ -88,44 +78,69 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
                                          "error": f"Optimization Engine failure: {response_content["Failed"]}"})
         yaml_file_content = yaml.dump(response_content).encode('utf-8')
         
+        content = list()
         # Convert the string content to a file-like object.
         # TODO: This line caused errors. Perhaps we need to remove it.
         # Also the b64 decode step is not needed at the moment.
         # file_like_object = BytesIO(base64.b64decode(response_content).decode().encode('utf-8'))
+        #print(yaml_file_content)
+        for serv in response_content:
+            site_id = serv['lnsd']['ns']['site-id']
+            # Check if the site exists in the topology component
+            response = requests.get(f"{TOPOLOGY_MODULE_URL}/nodes/{site_id}")
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code,
+                                    detail="Site not found")
+            site_dict = response.json()
+            if "iml_endpoint" in site_dict:
+                iml_endpoint = site_dict["iml_endpoint"]
+            else:
+                print("IML endpoint not found in the site dictionary, using default.")
+                iml_endpoint = "http://localhost:5000"  # Default value if not found
+
+            print("Deploying in ", site_id, iml_endpoint)
+            print("Service in YAML: ")
+            serv_yaml = yaml.dump(serv).encode('utf-8')
+            print(serv_yaml)
         
-        file_like_object = BytesIO(yaml_file_content)
-        
-        files = {'file': ('demo_nsd.yml', file_like_object)}
-        
-        try:
-            # The timeout tuple is set to (0.5, 10) seconds for connection and read timeouts respectively.
-            # TODO: When integrating with IML, we need to increase the connection timeout.
-            iml_response = requests.post(f"{iml_endpoint}", files=files, timeout=(0.5, 10))
-            # print(iml_response.json())
-            # import pdb;pdb.set_trace()
+            file_like_object = BytesIO(serv_yaml)
+            
+            files = {'file': (f"demo_nsd-{site_id}.yml", file_like_object)}
+            
+            try:
+                # The timeout tuple is set to (0.5, 10) seconds for connection and read timeouts respectively.
+                # TODO: When integrating with IML, we need to increase the connection timeout.
+                iml_response = requests.post(f"{iml_endpoint}", files=files, timeout=(0.5, 10))
+                print(iml_response.json())
+                # import pdb;pdb.set_trace()
 
-            json_data = iml_response.json()['response']
-            # Use a regular expression to find key-value pairs
-            pattern = r'(\w+):\s*([^,}]+)'
-            matches = re.findall(pattern, json_data)
+                #json_data = iml_response.json()['response']
+                # Use a regular expression to find key-value pairs
+                #pattern = r'(\w+):\s*([^,}]+)'
+                #matches = re.findall(pattern, json_data)
 
-            # Convert the matches to a dictionary
-            structured_dict = {key: value for key, value in matches}
+                # Convert the matches to a dictionary
+                #structured_dict = {key: value for key, value in matches}
 
-            service_id = int(structured_dict["id"])
-            service_name = structured_dict["Deployed"]
-            deployed_services[service_id] = {
-                "status": "deployed", "service_name": service_name, "file_name": file_name, "iml_endpoint": iml_endpoint} # , "site_id": site_id
+                service_id = int(structured_dict["id"])
+                #service_id = str(site_id) + "SOMERANDOMID"
+                service_name = structured_dict["Deployed"]
+                #service_name = str(site_id) + "-service"
+                deployed_services[service_id] = {
+                    "status": "deployed", "service_name": service_name, "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint}
 
-            # return JSONResponse(content={"message": "Received", "data": iml_response.json(), "file": base64.b64decode(response_content).decode(), "site_id": site_id, "service_id": service_id })
-            return JSONResponse(content={"message": "Received", "status": "deployed", "service_name": service_name,
-                                         "file_name": file_name, "iml_endpoint": iml_endpoint}) # , "site_id": site_id
-        except:
-            request_states[request_id]["status"] = "failed"
-        return JSONResponse(content={"message": "Failed to deploy service to IML", "status": "failed",
-                                     "service_name": service_request.name, # , "site_id": site_id
-                                     "iml_endpoint": iml_endpoint,
-                                     "requested_service": response_content})
+                return JSONResponse(content={"message": "Received", "data": iml_response.json(), "file": base64.b64decode(response_content).decode(), "site_id": site_id, "service_id": service_id })
+                #return JSONResponse(content={"message": "Received", "status": "deployed", "service_name": service_name,
+                #                             "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint})
+            except:
+                request_states[request_id]["status"] = "failed"
+                return JSONResponse(content={"message": "Failed to deploy service to IML", "status": "failed",
+                                         "service_name": service_request.name, "site_id": site_id,
+                                         "iml_endpoint": iml_endpoint,
+                                         "requested_service": response_content})
+            content.append({"message": "Received", "status": "deployed", "service_name": service_name,
+                "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint, "data": json.dumps(serv) })
+        return JSONResponse(content={'data': content})
     else:
         print("No final message received.")
         request_states[request_id]["status"] = "failed"
