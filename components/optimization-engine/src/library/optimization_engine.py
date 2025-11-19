@@ -13,15 +13,15 @@ import library.translator as translator
 import library.selector_pool.random_selection as random_selection
 
 # Demo Model Pool
-import ProcessingSystems.model_pool.partition as partition
-import ProcessingSystems.model_pool.autologic as autologic
-import ProcessingSystems.model_pool.linearheuristic as linearheuristic
-import ProcessingSystems.model_pool.greedysplit as greedysplit
+import library.model_pool.partition as partition
+import library.model_pool.autologic as autologic
+import library.model_pool.linearheuristic as linearheuristic
+import library.model_pool.greedysplit as greedysplit
 
-# Demo Data
-import ProcessingSystems.resources.topology as topology
-import ProcessingSystems.resources.monitoring as monitoring
-import ProcessingSystems.resources.functions as functions
+# Resources
+import library.resources.topology as topology
+import library.resources.monitoring as monitoring
+import library.resources.functions as functions
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ def optimization_engine(data, d6g_site):
     # Fetch topology from Topology Module
     logger.info("Fetching topology from Topology module...")
     topologyGraph, domains, site_resources = topology.fetch_d6g_site_info(d6g_site)
-    logger.info("Domains" + str(domains))
+    logger.info("D6G Sites: " + str(domains))
     if topologyGraph is None:
         logger.info("Error: Failed to fetch topology, check configuration.")
         error_payload = {"Error": "Failed to fetch topology, check configuration."}

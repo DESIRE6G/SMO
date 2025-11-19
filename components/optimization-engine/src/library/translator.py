@@ -11,51 +11,59 @@ import binascii
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def service2dict(service: bytes | str):
-    data = ""
-    if isinstance(service, bytes):
-        data = service.decode('utf-8')
-    elif isinstance(service, str):
-        data = service
-    try:
-        data = base64.b64decode(data).decode('utf-8')
-    except (binascii.Error, UnicodeDecodeError):
-        logger.info("Data is not base64 encoded")
-    if data == "":
-        raise ValueError("service variable is not str or bytes type.")
-    try:
-        return json.loads(data)
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        pass
-    try:
-        return yaml.safe_load(data)
-    except (yaml.YAMLError, UnicodeDecodeError):
-        pass
-    raise ValueError("Data is not valid JSON or YAML format.")
+# def service2dict(service: bytes | str):
+#     data = ""
+#     if isinstance(service, bytes):
+#         data = service.decode('utf-8')
+#     elif isinstance(service, str):
+#         data = service
+#     try:
+#         data = base64.b64decode(data).decode('utf-8')
+#     except (binascii.Error, UnicodeDecodeError):
+#         logger.info("Data is not base64 encoded")
+#     if data == "":
+#         raise ValueError("service variable is not str or bytes type.")
+#     try:
+#         return json.loads(data)
+#     except (json.JSONDecodeError, UnicodeDecodeError):
+#         pass
+#     try:
+#         return yaml.safe_load(data)
+#     except (yaml.YAMLError, UnicodeDecodeError):
+#         pass
+#     raise ValueError("Data is not valid JSON or YAML format.")
     
-def _extract_nsd(payload: dict) -> dict:
-    # 1. Common wrappers used by different APIs/versions.
-    for wrapper_key in ("lnsd", "local-nsd"):
-        if wrapper_key in payload:
-            payload = payload[wrapper_key]
-            break
+# def _extract_nsd(payload: dict) -> dict:
+#     # 1. Common wrappers used by different APIs/versions.
+#     for wrapper_key in ("lnsd", "local-nsd"):
+#         if wrapper_key in payload:
+#             payload = payload[wrapper_key]
+#             break
 
-    # 2. Some payloads add an extra 'ns' layer (your example does).
-    if "ns" in payload:
-        payload = payload["ns"]
+#     # 2. Some payloads add an extra 'ns' layer (your example does).
+#     if "ns" in payload:
+#         payload = payload["ns"]
 
-    return payload
+#     return payload
 
 
-def request2graph(service):
+def request2graph(service, functions):
     try:
-        service = service2dict(service)          # caller-supplied helper
+        # service = service2dict(service)          # caller-supplied helper
         # logger.info("Service content: %s", service)
 
         # --------- Locate the NSD we need to parse ---------- #
-        nsd = _extract_nsd(service)
+        # nsd = _extract_nsd(service)
 
         # UPDATED FUNCTION 
+
+        if isinstance(service, bytes):
+            service = json.loads(service.decode('utf-8'))
+        
+        # Extract lnsd.
+        logger.info("Service content: %s", service)
+        nsd = service.get("lnsd", service)
+        
         # Create an empty undirected graph.
         G = nx.Graph()
 

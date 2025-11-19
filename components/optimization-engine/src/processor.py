@@ -4,6 +4,7 @@ import asyncio
 from library.rabbitmq import consume_messages
 import logging
 import time
+
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":

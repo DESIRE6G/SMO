@@ -4,14 +4,14 @@ import logging
 import requests
 import yaml
 import json
-import ProcessingSystems.config as config
+import library.config as config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def fetch_service_catalog_info(funtions_graph_name = "apps", data = None):
     try:
-        url = f'http://{config.SERVICE_CATALOG_HOST}:{config.SERVICE_CATALOG_PORT}/retrieve/{funtions_graph_name}'
+        url = f'http://{config.SERVICE_CATALOG_HOST}:{config.SERVICE_CATALOG_PORT}/retrieve/{funtions_graph_name}.nf.yaml'
         # headers = {'accept': 'application/json'}
         headers = {'accept': 'application/x-yaml'}
         
