@@ -1,55 +1,88 @@
 # Topology Module Interface
-# Anestis Dalgkitsis | v3
+# Anestis Dalgkitsis | v3.1
 
 import networkx as nx
 import requests
 import logging
+import numpy
+import subprocess
 import json
 import library.config as config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
     
-def topology_snapshot():
+def fetch_d6g_site_info(d6g_site):
 
+    # Create an empty topology graph to be populated
     G = nx.Graph()
-    site_data = {}
-    sites = 0
 
-    try:
-        url = f'http://{config.TOPOLOGY_MODULE_HOST}:{config.TOPOLOGY_MODULE_PORT}/nodes/'
-        headers = {'accept': 'application/json'}
+    # Check if d6g_site is a list
+    if isinstance(d6g_site, list):
+        try:
+            site_data = []
+            for sitelist_index in range(len(d6g_site)):
+                url = f'http://{config.TOPOLOGY_MODULE_HOST}:{config.TOPOLOGY_MODULE_PORT}/nodes/{d6g_site[sitelist_index]}'
+                headers = {'accept': 'application/json'}
+                
+                response = requests.get(url, headers=headers)
+                response.raise_for_status()  # Raise an exception for bad status codes
+                
+                # Parse the JSON response into dictionary
+                site_info = response.json()
+                
+                # Store the values in a dictionary for later processing
+                site_data_instance = { "site-resources": [{
+                    "site-id-ref": d6g_site[sitelist_index],
+                    "site-available-vcpu": site_info.get('cpu', 0),
+                    "site-available-ram": site_info.get('mem', 0),
+                    "site-available-storage": site_info.get('storage', 0)
+                },]}
 
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status() 
+                site_data.append(site_data_instance)
+                
+            logger.info(f"Successfully retrieved site info for {d6g_site}") # : {site_data}
+            return G, len(d6g_site), site_data
+            
+        except requests.RequestException as e:
+            logger.error(f"Error making request for site {d6g_site}: {e}")
+            return None, None, None
+        except json.JSONDecodeError as e:
+            logger.error(f"Error parsing JSON response for site {d6g_site}: {e}")
+            return None, None, None
+        except Exception as e:
+            logger.error(f"Unexpected error getting site info for {d6g_site}: {e}")
+            return None, None, None
+    elif d6g_site:
+        try:
+            url = f'http://{config.TOPOLOGY_MODULE_HOST}:{config.TOPOLOGY_MODULE_PORT}/nodes/{d6g_site}'
+            headers = {'accept': 'application/json'}
+            
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()  # Raise an exception for bad status codes
+            
+            # Parse the JSON response into dictionary
+            site_info = response.json()
+            
+            # Store the values in a dictionary for later processing
+            site_data = { "site-resources": [{
+                "site-id-ref": d6g_site,
+                "site-available-vcpu": site_info.get('cpu', 0),
+                "site-available-ram": site_info.get('mem', 0),
+                "site-available-storage": site_info.get('storage', 0)
+            },]}
+            
+            logger.info(f"Successfully retrieved site info for {d6g_site}: {site_data}")
+            return G, 1, site_data
+            
+        except requests.RequestException as e:
+            logger.error(f"Error making request for site {d6g_site}: {e}")
+            return None, None, None
+        except json.JSONDecodeError as e:
+            logger.error(f"Error parsing JSON response for site {d6g_site}: {e}")
+            return None, None, None
+        except Exception as e:
+            logger.error(f"Unexpected error getting site info for {d6g_site}: {e}")
+            return None, None, None
 
-        payload = response.json()
-        nodes = payload.get("nodes", [])
-
-        for node in nodes:
-            site_id = node.get("site_id")
-            if not site_id: # skip malformed entries
-                continue
-
-            site_data[site_id] = {
-                "cpu": node.get("cpu"),
-                "mem": node.get("mem"),
-                "storage": node.get("storage"),
-                "iml_endpoint": node.get("iml_endpoint"),
-            }
-
-            G.add_node(site_id, **site_data[site_id])
-
-        sites = len(site_data)
-        logger.info("💡 Retrieved %d sites from topology module", sites)
-        return G, sites, site_data
-    
-    # Error handling
-    except requests.RequestException as e:
-        logger.error("❌ Error calling topology module: %s", e)
-    except json.JSONDecodeError as e:
-        logger.error("❌ Malformed JSON returned by topology module: %s", e)
-    except Exception as e:
-        logger.error("❌ Unexpected error while building topology snapshot: %s", e)
-
-    return None, -1, {}
+    return None, None, None

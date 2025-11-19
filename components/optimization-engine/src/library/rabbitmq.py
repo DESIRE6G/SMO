@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import time
 import yaml
 import logging
 from aio_pika import connect, IncomingMessage, ExchangeType, Message
@@ -35,8 +36,10 @@ async def process_message(message: IncomingMessage, message_counter):
 
         # ----- Service Request -----
 
+        start_time = time.time()
         modified_message = optimization_engine.optimization_engine(message.body)
-        logger.info("Optimization Engine returned a modified service request.")
+        logger.info("COMPLETE.")
+        logger.info("Total handling time: " + str((time.time() - start_time) * 1000) + " milliseconds.")
         if modified_message == -1:
             logger.error(f"Optimization Engine returned an error. Error during optimization pipeline.")
             # return yaml.dumps({"Error": "Error during optimization pipeline"})
