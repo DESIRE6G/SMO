@@ -44,11 +44,11 @@ deploy:
 	@rm -fr deployment/deploy
 	@cp -r deployment/template deployment/deploy
 	@rm -f deployment/deploy/docker-compose.yaml
-	@sed -i '' -e "s|DEFAULTTAG|$(TAG)|g" -e "s|IMAGE_PREFIX|$(IMAGE_PREFIX)|g" deployment/deploy/*.yaml
+	@sed -i -e "s|DEFAULTTAG|$(TAG)|g" -e "s|IMAGE_PREFIX|$(IMAGE_PREFIX)|g" deployment/deploy/*.yaml
 
 local:
 	@echo "Generating Docker Compose file for local deployment"
 	@rm -fr deployment/compose
 	@mkdir -p deployment/compose
 	@cp deployment/template/docker-compose.yaml deployment/compose
-	@sed -i '' -e "s|DEFAULTTAG|$(TAG)|g" -e "s|IMAGE_PREFIX|$(IMAGE_PREFIX)|g" -e "s|PLACEHOLDER|$(DEPLOY)|g" deployment/compose/docker-compose.yaml
+	@sed -i -e "s|DEFAULTTAG|$(TAG)|g" -e "s|IMAGE_PREFIX|$(IMAGE_PREFIX)|g" -e "s|PLACEHOLDER|$(DEPLOY)|g" deployment/compose/docker-compose.yaml

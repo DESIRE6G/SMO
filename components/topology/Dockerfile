@@ -18,4 +18,5 @@ RUN pip install --no-index --find-links=/svc/wheels --trusted-host pypi.python.o
 
 COPY --from=base /app /app
 WORKDIR /app
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+#CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["gunicorn", "app:app","--workers 12","--worker-class","uvicorn.workers.UvicornWorker","--bind", "0.0.0.0:8000"]

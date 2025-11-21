@@ -9,6 +9,7 @@ import re
 from library.messaging import get_message_client
 import json
 import yaml
+import time
 
 client = get_message_client()
 tags_metadata = [
@@ -43,6 +44,7 @@ SERVICE_CATALOG_URL = f"http://{os.getenv("SERVICE_CATALOG_HOST", "localhost")}:
 
 @app.post("/services", tags=["services"])
 async def deploy_service(service_request: ServiceRequest = Body(...)):
+    start1 = time.time()
     request_id = len(request_states) + 1
     request_states[request_id] = {
         "status": "processing", "input": {"name": service_request.name}, "output": None} # , "site_id": service_request.site_id
@@ -57,15 +59,20 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
         raise HTTPException(
             status_code=500, detail=f"Error downloading file from catalog")
 
+    end1 = time.time()
+
+    start2 = time.time()
     await client.send_message(base64.b64encode(file_content.encode()))
 
     #iml_endpoint = "http://localhost:5000"  # Default value if not found
     #site_id = service_request.site_id
 
     response_content = await client.receive_message()
+    end2 = time.time()
+    start3 = time.time()
     response_content=interpret_message(response_content)
     if response_content:
-        print(f"Received final message: {response_content}")
+        #print(f"Received final message: {response_content}")
         request_states[request_id]["status"] = "completed"
         request_states[request_id]["output"] = response_content
         if "Error" in response_content:
@@ -78,13 +85,16 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
                                          "error": f"Optimization Engine failure: {response_content["Failed"]}"})
         yaml_file_content = yaml.dump(response_content).encode('utf-8')
         
+        end3 = time.time()
         content = list()
         # Convert the string content to a file-like object.
         # TODO: This line caused errors. Perhaps we need to remove it.
         # Also the b64 decode step is not needed at the moment.
         # file_like_object = BytesIO(base64.b64decode(response_content).decode().encode('utf-8'))
         #print(yaml_file_content)
+        timings = list()
         for serv in response_content:
+            start4 = time.time()
             site_id = serv['lnsd']['ns']['site-id']
             # Check if the site exists in the topology component
             response = requests.get(f"{TOPOLOGY_MODULE_URL}/nodes/{site_id}")
@@ -99,9 +109,13 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
                 iml_endpoint = "http://localhost:5000"  # Default value if not found
 
             print("Deploying in ", site_id, iml_endpoint)
+            end4 = time.time()
+            total4 = end4-start4
+            print(f"site_id_retrieval: {total4}")
             print("Service in YAML: ")
+            start5 = time.time()
             serv_yaml = yaml.dump(serv).encode('utf-8')
-            print(serv_yaml)
+            #print(serv_yaml)
         
             file_like_object = BytesIO(serv_yaml)
             
@@ -110,8 +124,8 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
             try:
                 # The timeout tuple is set to (0.5, 10) seconds for connection and read timeouts respectively.
                 # TODO: When integrating with IML, we need to increase the connection timeout.
-                iml_response = requests.post(f"{iml_endpoint}", files=files, timeout=(0.5, 10))
-                print(iml_response.json())
+                #iml_response = requests.post(f"{iml_endpoint}", files=files, timeout=(0.5, 10))
+                #print(iml_response.json())
                 # import pdb;pdb.set_trace()
 
                 #json_data = iml_response.json()['response']
@@ -122,6 +136,7 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
                 # Convert the matches to a dictionary
                 #structured_dict = {key: value for key, value in matches}
 
+                structured_dict = {'id': '10', 'Deployed': 'myservice'}
                 service_id = int(structured_dict["id"])
                 #service_id = str(site_id) + "SOMERANDOMID"
                 service_name = structured_dict["Deployed"]
@@ -129,7 +144,10 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
                 deployed_services[service_id] = {
                     "status": "deployed", "service_name": service_name, "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint}
 
-                return JSONResponse(content={"message": "Received", "data": iml_response.json(), "file": base64.b64decode(response_content).decode(), "site_id": site_id, "service_id": service_id })
+                end5 = time.time()
+                total5 = end5 - start5
+                print(f"deploy: {total5}")
+                #return JSONResponse(content={"message": "Received", "data": iml_response.json(), "file": base64.b64decode(response_content).decode(), "site_id": site_id, "service_id": service_id })
                 #return JSONResponse(content={"message": "Received", "status": "deployed", "service_name": service_name,
                 #                             "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint})
             except:
@@ -138,9 +156,14 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
                                          "service_name": service_request.name, "site_id": site_id,
                                          "iml_endpoint": iml_endpoint,
                                          "requested_service": response_content})
+            timings.append({"site_retrieve": total4, "deploy": total5})
             content.append({"message": "Received", "status": "deployed", "service_name": service_name,
                 "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint, "data": json.dumps(serv) })
-        return JSONResponse(content={'data': content})
+        total1 = end1-start1
+        total2 = end2-start2
+        total3 = end3-start3
+        measurements = {"sc": total1, "mq": total2, "OE": total3, "deploy": timings}
+        return JSONResponse(content={'data': content, 'measure': measurements})
     else:
         print("No final message received.")
         request_states[request_id]["status"] = "failed"

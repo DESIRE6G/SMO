@@ -44,7 +44,6 @@ services:
 
   smo-optimization-engine:
     image: IMAGE_PREFIXdesire6g-oe:DEFAULTTAG
-    container_name: smo-optimization-engine
     environment:
       - RABBITMQ_HOST=smo-rabbitmq
       - INPUT_TOPIC=input_topic

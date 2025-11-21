@@ -37,7 +37,7 @@ def get_message_client() -> MessageClient:
             rabbitmq_host=os.getenv("RABBITMQ_HOST", "localhost"),
             input_topic=os.getenv("INPUT_TOPIC", "input_topic"),
             final_topic=os.getenv("FINAL_TOPIC", "final_topic"),
-            max_retries=int(os.getenv("RABBITMQ_MAX_RETRIES", 150))
+            max_retries=int(os.getenv("RABBITMQ_MAX_RETRIES", 15000))
         )
     raise ValueError(f"Invalid messaging system specified: {backend}")
 
@@ -105,7 +105,7 @@ class RabbitMQClient(MessageClient):
         try:
             self.connection = await connect_robust(f"amqp://{self.rabbitmq_host}/")
             self.channel = await self.connection.channel()
-            await self.channel.declare_queue(self.input_topic)
+            await self.channel.declare_queue(self.input_topic,durable=True,exclusive=False, auto_delete=False)
             await self.channel.declare_queue(self.final_topic)
         except AMQPConnectionError as e:
             print(f"Error connecting to RabbitMQ: {e}")
@@ -135,14 +135,15 @@ class RabbitMQClient(MessageClient):
             queue = await self.channel.get_queue(self.final_topic)
             for _ in range(self.max_retries):
                 try:
-                    message = await queue.get(timeout=3)
+                    message = await queue.get(timeout=1)
                     if message:
                         await message.ack()
                         return message.body.decode()
                 except QueueEmpty:
                     print("No message yet available in the queue.")
                     # Wait for 3 seconds before retrying
-                    await asyncio.sleep(3)
+                    #await asyncio.sleep(0.5)
+                    pass
             print("No message available after retrying.")
             return None
         except AMQPConnectionError as e:

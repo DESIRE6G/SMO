@@ -21,6 +21,7 @@ def clear_screen():
 
 async def process_message(message: IncomingMessage, message_counter):
     try:
+
         body = message.body.decode('utf-8')
         body = base64.b64decode(body).decode('utf-8')
         parsed_yaml = yaml.safe_load(body)
@@ -50,8 +51,6 @@ async def process_message(message: IncomingMessage, message_counter):
         
         # ----- Optimized Service Request -----
         
-        # Manually acknowledge the message
-        await message.ack()
 
         logger.info("Optimized request ready for dispatch.")
         return modified_message
@@ -68,9 +67,10 @@ async def consume_messages():
         # Connect to RabbitMQ
         connection = await connect(f"amqp://{rabbitmq_host}/")
         channel = await connection.channel()
+        await channel.set_qos(prefetch_count=1)
 
         # Declare queues and get the default exchange
-        input_queue = await channel.declare_queue(input_topic)
+        input_queue = await channel.declare_queue(input_topic, durable=True,exclusive=False, auto_delete=False)
         output_queue = await channel.declare_queue(output_topic)
         default_exchange = channel.default_exchange
 
@@ -80,6 +80,8 @@ async def consume_messages():
             nonlocal message_counter  # Use nonlocal to modify the outer variable
             message_counter += 1
             modified_message = await process_message(message, message_counter)
+            # Manually acknowledge the message
+            await message.ack()
             if modified_message:
                 await default_exchange.publish(
                     Message(modified_message),
@@ -87,7 +89,7 @@ async def consume_messages():
                 )
                 # logger.info(f"Processed message {message_counter}: {message.body.decode()}")
 
-        await input_queue.consume(on_message)
+        await input_queue.consume(on_message, no_ack=False)
         logger.info("Waiting for messages to process. To exit, press CTRL+C")
 
         return connection
