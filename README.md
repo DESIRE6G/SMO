@@ -245,11 +245,11 @@ http://localhost:8004/process_error \
 }'
 ```
 
-## Demo1
+## Demo1 (Updated Tue Nov 25 2025)
 
 ### Step 1: Add sites to the Topology Module
 
-Add sites to the Topology Module:
+Add sites to the Topology Module (delete and re-upload new):
 
 ```bash
 TOPOLOGY_ENDPOINT="localhost:8002"
@@ -258,7 +258,7 @@ curl -X 'POST' \
    -H 'accept: application/json' \
    -H 'Content-Type: application/json' \
    -d '{
-   "site_id": "d6g-000",
+   "site_id": "site0",
    "cpu": 4,
    "mem": 8,
    "storage": 64,
@@ -269,7 +269,7 @@ curl -X 'POST' \
    -H 'accept: application/json' \
    -H 'Content-Type: application/json' \
    -d '{
-   "site_id": "d6g-001",
+   "site_id": "site1",
    "cpu": 8,
    "mem": 64,
    "storage": 2048,
@@ -280,7 +280,7 @@ curl -X 'POST' \
    -H 'accept: application/json' \
    -H 'Content-Type: application/json' \
    -d '{
-   "site_id": "d6g-002",
+   "site_id": "site2",
    "cpu": 32,
    "mem": 128,
    "storage": 3072,
@@ -291,6 +291,7 @@ curl -X 'POST' \
 Verify the nodes have been added succesfully:
 
 ```bash
+TOPOLOGY_ENDPOINT="localhost:8002"
 curl -X 'GET' \
   "http://$TOPOLOGY_ENDPOINT/nodes/"  \
   -H 'accept: application/json'
@@ -298,19 +299,19 @@ curl -X 'GET' \
 
 ### Step 2: Upload Service Graph to Service Catalog
 
-Next, we need to upload [demo_nsd1.sg.yaml](./demo/demo_nsd1.sg.yaml) to the Service Catalog.
+Next, we need to upload [new_demo1_nsd.sg.yml](./demo/new_demo1_nsd.sg.yml) to the Service Catalog (delete and re-upload new):
 
 ```bash
-SC_CATALOG=localhost:8001
+SC_CATALOG="localhost:8001"
 curl -X 'POST' \
 "http://$SC_CATALOG/catalog/" \
--F "file=@demo/demo1_nsd.sg.yml"
+-F "file=@demo/new_demo1_nsd.sg.yml"
 ```
 
 Verify the Service Graph has been uploaded:
 
 ```bash
-SC_CATALOG=localhost:8001
+SC_CATALOG="localhost:8001"
 curl -X 'GET' \
 "http://$SC_CATALOG/catalog/service_graph" \
 -H 'accept: application/json'
@@ -319,16 +320,21 @@ curl -X 'GET' \
 Upload Applications to the Service Catalog.
 
 ```bash
-SC_CATALOG=localhost:8001
-# curl -X POST \
-# "http://$SC_CATALOG/catalog/" \
-# -H "Content-Type: application/json" -d '{"name": "apps","data": {"application-functions": [{"af-instance-id": "ar-edge-app-i01", "nf-vcpu": 2, "nf-memory": 5, "nf-storage": 25}, {"af-instance-id": "ar-source-app-i01", "nf-vcpu": 10, "nf-memory": 18, "nf-storage": 258}]}}'
+SC_CATALOG="localhost:8001"
 echo 'application-functions:
-  - af-instance-id: ar-edge-app-i01
-    nf-vcpu: 2
-    nf-memory: 5
-    nf-storage: 25
-  - af-instance-id: ar-source-app-i01
+  - instance-id: "app"
+    id: "iperf3"
+    name: "Pkt destination"
+    version: "1.0"
+    node: "p42"
+    domain: "external"
+    static-nfids: [44,45]
+    static-macs: ["02:22:33:44:55:99"]
+    static-ips: ["10.30.7.213"]
+    is-scalable: true
+    instances: 2
+    static-instance-ips: ["10.30.7.213", "10.30.7.214"]
+    static-instance-nodes: ["orin3", "ubuntu"]
     nf-vcpu: 10
     nf-memory: 18
     nf-storage: 258' | curl -X POST \
@@ -336,13 +342,23 @@ echo 'application-functions:
 -F "file=@-;filename=apps.nf.yaml"
 ```
 
+Verify the applications have been uploaded:
+
+```bash
+SC_CATALOG="localhost:8001"
+curl -X 'GET' \
+"http://$SC_CATALOG/catalog/network_function" \
+-H 'accept: application/json'
+```
+
 ### Step 3: Deploy Service to Service Orchestrator
 
-Deploy the Service Graph to the Service Orchestrator. 
+Deploy the new Service Graph to the Service Orchestrator to exdcute Demo1. 
 
-```terminal
-$ SO_ENDPOINT=localhost:8000
-$ curl -X 'POST' \
+```bash
+SO_ENDPOINT="localhost:8000"
+curl -X 'POST' \
 "http://$SO_ENDPOINT/services" \
 -H 'Content-Type: application/json' \
--d '{"name": "demo1_nsd.sg.yml"}'
+-d '{"name": "new_demo1_nsd.sg.yml"}'
+```

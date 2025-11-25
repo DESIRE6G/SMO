@@ -51,7 +51,7 @@ services:
       - OUTPUT_TOPIC=output_topic
       - KAFKA_BOOTSTRAP_SERVERS=localhost
       - TOPOLOGY_MODULE_HOST=smo-topology
-      - SITE="d6g-000,d6g-001,d6g-002"
+      - SITE="site0,site1,site2"
       - TOPOLOGY_MODULE_PORT=8000
       - SERVICE_CATALOG_HOST=smo-service-catalog
       - SERVICE_CATALOG_PORT=8000
