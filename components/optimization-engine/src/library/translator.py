@@ -61,7 +61,7 @@ def request2graph(service, functions):
             service = json.loads(service.decode('utf-8'))
         
         # Extract lnsd.
-        logger.info("Service content: %s", service)
+        # logger.info("Service content: %s", service)
         nsd = service.get("lnsd", service)
         
         # Create an empty undirected graph.
@@ -158,7 +158,7 @@ def graph2request(graph, data={}):
         if isinstance(graph, dict):
             descriptor_version = graph.get("lnsd", {}).get("ns", {}).get("descriptor-version", "")
             if descriptor_version == "1.0":
-                logger.info("Descriptor version is 1.0.")
+                # logger.info("Descriptor version is 1.0.")
                 return graph
 
         if "local-nsd" in data:

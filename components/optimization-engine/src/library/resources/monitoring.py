@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def check_resources(merged_functions, site_resources):
-    logger.info("Starting resource check with site_resources content: %s", site_resources)
+    logger.info("Starting resource check with site_resources") # content: %s", site_resources)
 
     # Check if resources are in a list
     if isinstance(site_resources, list):

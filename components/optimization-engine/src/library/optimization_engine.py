@@ -1,5 +1,5 @@
 # Optimization Engine Module Core Flow 
-# Anestis Dalgkitsis | v6.1
+# Anestis Dalgkitsis | v6.3.28
 
 # Python Modules
 import json
@@ -37,7 +37,7 @@ algorithms = {
 # Model Selector Demo Configuration
 selectors = {
     "spinwheel.py": {"enabled": False},
-    "next.py (Default)": {"enabled": True}, # Produces deterministic output for live demos
+    "next.py": {"enabled": True}, # Produces deterministic output for live demos
     "intelligence.py": {"enabled": False},
 }
 
@@ -77,7 +77,7 @@ def optimization_engine(data, d6g_site):
     
     # Check if only one D6G site, if yes forward the request to back to the local SO
     if domains == 1:
-        logger.info("✅ There is only one D6G node in the site. Forwarding request to the local SO.")
+        logger.info("There is only one D6G node in the site. Forwarding request to the local SO.")
         # Decode bytes to string if data is in bytes format
         if isinstance(data, bytes):
             data = data.decode('utf-8')
@@ -141,7 +141,7 @@ def optimization_engine(data, d6g_site):
             encoded_subgraphs.append(encoded_subgraph)
             logger.info("Subgraph encoded successfully.")
     logger.info("Combined subgraphs encoded successfully.")
-    logger.info("ES: " + str(encoded_subgraphs))
+    # logger.info("ES: " + str(encoded_subgraphs))
 
     # Combine Response
     try:
@@ -150,7 +150,7 @@ def optimization_engine(data, d6g_site):
         # for domain in range(0, domains-1):
         #     combined_response = encoded_subgraph # combined_response.append({f"s{domain+1}e": encoded_subgraphs[domain], "site_id": f"SITEID{domain+1}"})
         logger.info("Combined response ready.")
-        logger.info("CR: " + str(combined_response))
+        # logger.info("CR: " + str(combined_response))
     except Exception as e:
         logger.exception("An error occurred while combining the response: %s", e)
         error_payload = {"Error": "An error occurred while combining the response: " + str(e)}
