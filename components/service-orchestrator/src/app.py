@@ -9,6 +9,7 @@ import re
 from library.messaging import get_message_client
 import json
 import yaml
+import traceback
 
 client = get_message_client()
 tags_metadata = [
@@ -110,11 +111,13 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
             try:
                 # The timeout tuple is set to (0.5, 10) seconds for connection and read timeouts respectively.
                 # TODO: When integrating with IML, we need to increase the connection timeout.
-                iml_response = requests.post(f"{iml_endpoint}", files=files, timeout=(0.5, 10))
-                print(iml_response.json())
+                iml_response = requests.post(f"{iml_endpoint}/iml/yaml/deploy", files=files, timeout=(0.5, 10))
+                print(iml_response)
+                dir(iml_response)
+                print(iml_response.text)
                 # import pdb;pdb.set_trace()
 
-                #json_data = iml_response.json()['response']
+                json_data = iml_response.json()['response']
                 # Use a regular expression to find key-value pairs
                 #pattern = r'(\w+):\s*([^,}]+)'
                 #matches = re.findall(pattern, json_data)
@@ -132,7 +135,12 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
                 return JSONResponse(content={"message": "Received", "data": iml_response.json(), "file": base64.b64decode(response_content).decode(), "site_id": site_id, "service_id": service_id })
                 #return JSONResponse(content={"message": "Received", "status": "deployed", "service_name": service_name,
                 #                             "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint})
-            except:
+            except requests.exceptions.RequestException as e:
+                print("Request failed!")
+                # Print the exception type and message
+                print(f"Exception: {type(e).__name__}: {e}")
+                # Optional: print full traceback
+                traceback.print_exc()
                 request_states[request_id]["status"] = "failed"
                 return JSONResponse(content={"message": "Failed to deploy service to IML", "status": "failed",
                                          "service_name": service_request.name, "site_id": site_id,
