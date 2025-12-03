@@ -62,7 +62,7 @@ def request2graph(service, functions):
         
         # Extract lnsd.
         # logger.info("Service content: %s", service)
-        nsd = service.get("lnsd", service)
+        nsd = service.get("nsd", service)
         
         # Create an empty undirected graph.
         G = nx.Graph()
@@ -154,9 +154,11 @@ def graph2request(graph, data={}):
                 logger.info("Data provided is not valid JSON: %s", json_err)
                 return None
 
-        # Check if graph has descriptor-version "1.0"
+        # Check if graph has descriptor-version "1.0" (support both nsd and lnsd keys)
         if isinstance(graph, dict):
-            descriptor_version = graph.get("lnsd", {}).get("ns", {}).get("descriptor-version", "")
+            # Check for nsd key first, then lnsd key
+            nsd_root = graph.get("nsd", graph.get("lnsd", {}))
+            descriptor_version = nsd_root.get("ns", {}).get("descriptor-version", "")
             if descriptor_version == "1.0":
                 # logger.info("Descriptor version is 1.0.")
                 return graph
