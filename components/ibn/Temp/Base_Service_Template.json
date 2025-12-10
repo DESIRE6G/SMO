@@ -1,0 +1,30 @@
+{
+  "id": "SERVICE-ID",
+  "serviceType": "SERVICE-TYPE",
+  "name": "SERVICE-NAME",
+  "state": "active",
+  "category": "SERVICE-CATEGORY",
+  "validFor": {
+    "startDateTime": "YYYY-MM-DDTHH:MM:SSZ",
+    "endDateTime": "YYYY-MM-DDTHH:MM:SSZ"
+  },
+  "relatedEntity": [],
+  "relatedParty": {
+    "type": "string",
+    "description": "DESCRIPTION-OF-RELATED-PARTY"
+  },
+  "place": {
+    "type": "string",
+    "description": "DESCRIPTION-OF-PLACE"
+  },
+  "serviceLevelSpecParameters": [
+    {
+      "name": "KPI-NAME",
+      "serviceParmCategory": "service specific",
+      "serviceParmPerspective": "single user/device session OR aggregated",
+      "transformationAlgorithmOfKQI": "DESCRIPTION-OF-KPI-CALCULATION",
+      "parameterType": "KPI",
+      "targetValue": "TARGET-VALUE"
+    }
+  ]
+}

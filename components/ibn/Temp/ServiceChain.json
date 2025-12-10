@@ -1,0 +1,40 @@
+{
+  "dynamicPathSelection": [
+    {
+      "trafficType": "Default",
+      "servicePath": [
+        {
+          "id": "svc-001",
+          "name": "D6G_In/Out_1",
+          "specHref": "/tmf-api/serviceCatalog/v4/serviceSpecification/svc-001"
+        },
+        {
+          "id": "svc-002",
+          "name": "Firewall_1",
+          "specHref": "/tmf-api/serviceCatalog/v4/serviceSpecification/svc-002"
+        },
+        {
+          "id": "svc-003",
+          "name": "NAT_1",
+          "specHref": "/tmf-api/serviceCatalog/v4/serviceSpecification/svc-003"
+        },
+        {
+          "id": "svc-004",
+          "name": "D6G_In/Out_2",
+          "specHref": "/tmf-api/serviceCatalog/v4/serviceSpecification/svc-004"
+        }
+      ],
+      "slaHref": "/tmf-api/slaManagement/v4/slaAgreement/default-basic"
+    },
+    {
+      "trafficType": "WebBrowsing",
+      "servicePath": [],
+      "slaHref": " "
+    },
+    {
+      "trafficType": "VoIP",
+      "servicePath": [],
+      "slaHref": " "
+    }
+  ]
+}

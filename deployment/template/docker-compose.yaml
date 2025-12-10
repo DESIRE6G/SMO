@@ -70,6 +70,25 @@ services:
     ports:
       - 8004:8000
 
+  smo-ibn:
+    image: IMAGE_PREFIXdesire6g-ibn:DEFAULTTAG
+    container_name: smo-ibn
+    ports:
+      - "8005:8000"
+    environment:
+      - SERVICE_ORCHESTRATOR_HOST=smo-service-orchestrator
+      - SERVICE_ORCHESTRATOR_PORT=8000
+      - TOPOLOGY_MODULE_HOST=smo-topology
+      - TOPOLOGY_MODULE_PORT=8000
+      - SERVICE_CATALOG_HOST=smo-service-catalog
+      - SERVICE_CATALOG_PORT=8000
+      - MESSAGING_SYSTEM=rabbitmq
+      - RABBITMQ_HOST=smo-rabbitmq
+      - RABBITMQ_MAX_RETRIES=150
+      - INPUT_TOPIC=input_topic
+      - FINAL_TOPIC=output_topic
+    restart: unless-stopped
+
 networks:
   default:
     name: d6g-smo-network

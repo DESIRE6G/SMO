@@ -1,0 +1,128 @@
+@prefix ex:   <http://example.org/> .
+@prefix icm:  <https://tmforum.org/2020/07/IntentCommonModel/> .
+@prefix imo:  <https://tmforum.org/2020/07/IntentOntology/> .
+@prefix iv:   <https://tmforum.org/IntentExtension/Validity/> .
+@prefix arc:  <https://tmforum.org/IntentExtension/AcceptanceRejectionControl/> .
+@prefix quan: <https://tmforum.org/2020/07/Quantities/> .
+@prefix set:  <https://tmforum.org/2020/07/SetOperations/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# Intent Declaration (Slice-specific)
+#################################################################
+
+ex:custom_slice_DT_Robot
+    a icm:Intent ;
+    rdfs:comment "Real-time Digital Twin for Unitree Go1 edge robotic control and monitoring";
+    imo:intentOwner ex:SLA_to_Intent ;
+    icm:layer "SMO" ;
+    log:allOf ( ex:E0 ex:E1 ex:E2 ) .
+
+ex:LocationInfo
+    a icm:Information ;
+    rdfs:label "Geographical location of the slice service" ;
+    icm:information "5TONIC Open Research and Innovation Laboratory / Smart Factory, Spain" .
+
+ex:UserInfo
+    a icm:Information ;
+    rdfs:label "Intended user or application" ;
+    icm:information "Remote operator / Use-case specific application" .
+#################################################################
+# Delivery Expectation (Slice Resources)
+#################################################################
+
+ex:T1
+    a icm:Target ;
+    rdfs:member ex:custom_slice_DT_Robot ;
+    icm:information ex:LocationInfo , ex:UserInfo .
+ex:E0
+    a icm:DeliveryExpectation ;
+    icm:target ex:T1 ;
+    icm:DeliveryDescription ex:usecase_specific_slice_service ;
+    icm:OrderID "1" .
+
+#################################################################
+# Property Expectations (Slice KPIs)
+#################################################################
+
+ex:T2
+    a icm:Target ;
+    rdfs:member ex:custom_slice_DT_Robot .
+
+ex:E1
+    a icm:PropertyExpectation ;
+    icm:target ex:T2 ;
+    log:allOf ( ex:C1 ex:C2 ex:C3 ex:C4 ) .
+
+# Slice Availability
+ex:C1
+    a icm:Condition ;
+    rdfs:label "Availability" ;
+    quan:atLeast [
+        ex:availability [
+            rdf:value "99.999"^^xsd:decimal ;
+            icm:unit80000 "percentage"
+        ]
+    ] .
+
+# Slice Throughput
+ex:C2
+    a icm:Condition ;
+    rdfs:label "Throughput" ;
+    quan:atLeast [
+        ex:throughput [
+            rdf:value "100"^^xsd:decimal ;
+            icm:unit80000 "Mbps"
+        ]
+    ] .
+
+# Slice Latency
+ex:C3
+    a icm:Condition ;
+    rdfs:label "Latency" ;
+    quan:atMost [
+        ex:latency [
+            rdf:value "20"^^xsd:decimal ;
+            icm:unit80000 "ms"
+        ]
+    ] .
+
+# Slice Packet Loss
+ex:C4
+    a icm:Condition ;
+    rdfs:label "PacketLoss" ;
+    quan:atMost [
+        ex:packetLoss [
+            rdf:value "0.1"^^xsd:decimal ;
+            icm:unit80000 "percentage"
+        ]
+    ] .
+
+
+ex:T2
+  a icm:Target ;
+  rdfs:member ex:custom_slice_DT_Robot, ex:E0, Ex:E1
+.
+ex:RE1
+    a icm:ObservationReportingExpectation , iv:ValidityReportingExpectation ;
+    icm:target ex:T4 
+    a ut:IntentReportingExpectation
+    icm:target ex:T2 ; 
+    icm:reportTriggers [
+        a rdfs:Container ;
+        rdfs:member imo:IntentRejected ;
+        rdfs:member imo:IntentAccepted ;
+        rdfs:member imo:ThresholdBreach
+  ] .
+
+#################################################################
+# Notes
+#################################################################
+
+# This intent specifies a use-case specific network slice with stringent SLA requirements.
+# KPIs encoded:
+#   • Latency ≤ 20 ms
+#   • Throughput ≥ 100 Mbps
+#   • Availability ≥ 99.909%
+#   • Packet loss ≤ 0.1%

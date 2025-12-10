@@ -1,0 +1,174 @@
+nsd:
+  ns-instance-id: "22113344"
+  description: "Real-time Digital Twin slice for Unitree Go1 edge robotic control and monitoring"
+
+  ns:
+    name: "Digital Twin demo2"
+    id: "bbbbcccc"
+    vendor: "D6G"
+    descriptor-version: "1.0"
+    site-id: "site1"
+
+    relatedParty:
+      type: "string"
+      description: "Remote operator / technician"
+
+    place:
+      type: "string"
+      description: "5TONIC Open Research and Innovation Laboratory / Smart Factory, Spain"
+
+    serviceLevelSpecParameters:
+      - name: "Latency"
+        serviceParmCategory: "service specific"
+        serviceParmPerspective: "single user session"
+        transformationAlgorithmOfKQI: "Measure average end-to-end delay"
+        parameterType: "KPI"
+        targetValue: "20 ms"
+
+      - name: "Throughput"
+        serviceParmCategory: "service specific"
+        serviceParmPerspective: "single user session"
+        transformationAlgorithmOfKQI: "Measure sustained uplink/downlink throughput per user"
+        parameterType: "KPI"
+        targetValue: "100 Mbps"
+
+      - name: "Availability"
+        serviceParmCategory: "service specific"
+        serviceParmPerspective: "aggregated"
+        transformationAlgorithmOfKQI: "Measure service uptime divided by total time"
+        parameterType: "KPI"
+        targetValue: "99.999%"
+
+      - name: "Packet Error Rate"
+        serviceParmCategory: "service specific"
+        serviceParmPerspective: "single user session"
+        transformationAlgorithmOfKQI: "Measure packet error ratio as lost packets over total transmitted packets"
+        parameterType: "KPI"
+        targetValue: "0.1"
+
+  ######################################################################
+  # Application Functions
+  ######################################################################
+
+  application-functions:
+    # On edge AF
+    - instance-id: "app"
+      id: "go1-navigation"
+      name: "go1 navigation"
+      version: "1.0"
+      domain: "external"
+
+    - instance-id: "ros"
+      id: "ros-master"
+      name: "ros-master"
+      version: "1.0"
+      domain: "external"
+
+    - instance-id: "gesture"
+      id: "gesture-control"
+      name: "gesture control"
+      version: "1.0"
+      domain: "external"
+
+    - instance-id: "twin"
+      id: "digital-twin"
+      name: "digital twin"
+      version: "1.0"
+      domain: "external"
+
+    - instance-id: "receiver"
+      id: "video-receiver"
+      name: "video receiver"
+      version: "1.0"
+      domain: "external"
+
+    # On robot UE
+    - instance-id: "go1-base"
+      id: "go1-base"
+      name: "Go 1 Base"
+      version: "1.0"
+      domain: "external"
+      is-ue: true
+
+    - instance-id: "lidar"
+      id: "lidar"
+      name: "lidar"
+      version: "1.0"
+      domain: "external"
+      is-ue: true
+
+    - instance-id: "streamer"
+      id: "video-streamer"
+      name: "Video Streamer"
+      version: "1.0"
+      domain: "external"
+      is-ue: true
+
+  ######################################################################
+  # Network Functions
+  ######################################################################
+
+  network-functions:
+    - instance-id: "ran"
+      name: "RAN"
+      version: "1.0"
+      domain: "external"
+      is-ue: true
+
+    - instance-id: "firewall"
+      id: "reflector-bmv2"
+      name: "Firewall"
+      version: "1.0"
+
+  ######################################################################
+  # Forwarding Graphs
+  ######################################################################
+
+  forwarding-graphs:
+    - graph-name: "upstream"
+      direction: "upstream"
+      links:
+        - id: "upstream-1"
+          connection-points:
+            - if-id-ref: "ran"
+            - if-id-ref: "firewall"
+        - id: "upstream-2"
+          connection-points:
+            - if-id-ref: "firewall"
+            - if-id-ref: "app"
+
+    - graph-name: "downstream"
+      direction: "downstream"
+      links:
+        - id: "downstream-1"
+          connection-points:
+            - if-id-ref: "app"
+            - if-id-ref: "firewall"
+        - id: "downstream-2"
+          connection-points:
+            - if-id-ref: "firewall"
+            - if-id-ref: "ran"
+
+    - graph-name: "upstream2"
+      direction: "upstream"
+      links:
+        - id: "upstream-3"
+          connection-points:
+            - if-id-ref: "ran"
+            - if-id-ref: "firewall"
+        - id: "upstream-4"
+          connection-points:
+            - if-id-ref: "firewall"
+            - if-id-ref: "ros"
+
+    - graph-name: "downstream2"
+      direction: "downstream"
+      links:
+        - id: "downstream-3"
+          connection-points:
+            - if-id-ref: "ros"
+            - if-id-ref: "firewall"
+        - id: "downstream-4"
+          connection-points:
+            - if-id-ref: "firewall"
+            - if-id-ref: "ran"
