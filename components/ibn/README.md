@@ -44,7 +44,6 @@ POST method is implemented.
 TODO: Enable reading parameters from json file.
 
 ```bash
-curl -X POST http://localhost:8005/api/add_topology \
-    -H 'Content-Type: application/json' \
-    -d '{"text": "fastapi is cool"}'
+curl http://localhost:8005/api/add_topology
+
 ```
