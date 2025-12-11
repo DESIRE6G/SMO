@@ -1,0 +1,132 @@
+local-nsd: 
+
+  ## local-nsd refers to a network service graph whose subgraph is described 
+
+  info: 
+
+    ns-instance-id: "55" # same as the 16bit long identifier used in D6G Header 
+
+    ns: 
+
+      name: "URLLC Service" #Servis ismi
+
+      id: "0001" # refers to the ns in the service catalog 
+
+      vendor: "D6G" 
+
+      descriptor-version: "1.0" 
+
+    site-id: "d6g-001" 
+
+  network-functions: 
+
+    - nf-instance-id: "flowcl-i01" 
+
+      nf-instance-d6g-id: "101" 
+
+      nf-id: "flowcl" 
+
+      nf-name: "Flow Classifier" 
+
+      nf-version: "v1.0" 
+
+      nf-mgmt-network: "shared-mgmt-net" # provides access to higher level controllers 
+
+    - nf-instance-id: "firewall-i01" 
+
+      nf-instance-d6g-id: "102" 
+
+      nf-id: "firewall" 
+
+      nf-name: "ACL Firewall" 
+
+      nf-version: "v1.0" 
+
+      nf-mgmt-network: "shared-mgmt-net" 
+
+  application-functions: 
+
+    - af-instance-id: "lws-i01" 
+
+      af-instance-d6g-id: "103" 
+
+      af-id: "localwebserver" 
+
+      af-name: "Local web server for as an example service" 
+
+      af-version: "1.0" 
+
+      af-mgmt-network: "shared-mgmt-net" # optional 
+
+
+
+  forwarding_graphs: 
+
+      - member-graph-index: 1 # list of subgraphs/forwarding segments implemented by the given D6G site 
+
+        graph-name: "uplink" 
+        links: 
+
+          - link-id: "toFW" 
+
+            connection-points: 
+
+            - from:  "D6G_In/Out_1"
+              to: "Firewall_1"
+              description: "Router D6G_In/Out_1 to Firewall_1 connection"
+
+          - link-id: "toNAT" 
+
+            connection-points: 
+
+            - from:  "Firewall_1"
+              to: "NAT_1"
+              description: "Firewall_1 to NAT_1 connection"
+
+          - link-id: "toExit" 
+
+            connection-points: 
+
+            - from:  "NAT_1"
+              to: "D6G_In/Out_2"
+              description: "NAT_1 to Router D6G_In/Out_2 connection"
+
+        site-latency: "1 ms" 
+        site-throughput: "20 mbps" 
+        site-availability: "99.999" 
+        site-packet-loss: "0.000001"
+
+      - member-graph-index: 2 # list of subgraphs/forwarding segments implemented by the given D6G site 
+
+        graph-name: "downlink" 
+
+        links: 
+
+          - link-id: "toNAT" 
+
+            connection-points: 
+
+            - from:  "D6G_In/Out_2"
+              to: "NAT_1"
+              description: "from Router D6G_2 to NAT_1 connection"
+
+          - link-id: "toFW" 
+
+            connection-points: 
+
+            - from:  "NAT_1"
+              to: "Firewall_1"
+              description: "from NAT_1 to Firewall_1 to connection"
+
+          - link-id: "toExit" 
+
+            connection-points: 
+
+            - from:  "Firewall_1"
+              to: "D6G_In/Out_1"
+              description: "from Firewall_1 to Router D6G_1 connection"
+
+        site-latency: "1 ms" 
+        site-throughput: "20 mbps" 
+        site-availability: "99.999" 
+        site-packet-loss: "0.000001" 

@@ -1,0 +1,55 @@
+{
+  "id": "DT-002",
+  "serviceType": "Digital Twin Slice",
+  "name": "Real-time Digital Twin for Unitree Go1",
+  "state": "active",
+  "category": "Customer facing service",
+  "validFor": {
+    "startDateTime": "2025-01-01T00:00:00Z",
+    "endDateTime": "2025-12-31T23:59:59Z"
+  },
+  "relatedEntity": [],
+  "relatedParty": {
+    "type": "enterprise",
+    "description": "Remote operators and field technicians"
+  },
+  "place": {
+    "type": "location",
+    "description": "5TONIC Open Research and Innovation Laboratory / Smart Factory"
+  },
+  "serviceLevelSpecParameters": [
+    {
+      "name": "Latency",
+      "serviceParmCategory": "service specific",
+      "serviceParmPerspective": "single user session",
+      "transformationAlgorithmOfKQI": "Measure average end-to-end round-trip delay between robot and digital twin over a 5-minute interval",
+      "parameterType": "KPI",
+      "targetValue": "≤ 20 ms"
+    },
+    {
+      "name": "Throughput",
+      "serviceParmCategory": "service specific",
+      "serviceParmPerspective": "single user session",
+      "transformationAlgorithmOfKQI": "Measure sustained bidirectional throughput between robot edge node and control server",
+      "parameterType": "KPI",
+      "targetValue": "≥ 100 Mbps"
+    },
+    {
+      "name": "Availability",
+      "serviceParmCategory": "service specific",
+      "serviceParmPerspective": "single user session",
+      "transformationAlgorithmOfKQI": "Measure session uptime percentage within observation period",
+      "parameterType": "KPI",
+      "targetValue": "≥ 99.999%"
+    },
+    {
+      "name": "PacketLoss",
+      "serviceParmCategory": "service specific",
+      "serviceParmPerspective": "single user session",
+      "transformationAlgorithmOfKQI": "Measure average packet loss ratio over total transmitted packets in 5-minute window",
+      "parameterType": "KPI",
+      "targetValue": "≤ 0.1%"
+    }
+  ],
+  "description": "This Digital Twin (DT) slice enables real-time control and monitoring for the Unitree Go1 robot. It provides ultra-reliable, low-latency connectivity within the 5TONIC Smart Factory for remote technicians and operators."
+}

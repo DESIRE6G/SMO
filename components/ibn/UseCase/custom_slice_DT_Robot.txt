@@ -1,0 +1,4 @@
+Real-time Digital Twin for Quadruped Robot (Unitree Go1) is an edge robotic control and monitoring service that maintains a live virtual replica of the robot by continuously synchronizing sensor streams upstream and issuing low-latency control commands downstream; latency-sensitive functions such as localization, SLAM, planning and collision avoidance run on-device or at the edge while cloud components handle long-term storage, model training and fleet analytics. Service area: 5TONIC Open Research and Innovation Laboratory / Smart Factory. User: remote operator / technician who performs teleoperation, supervision, diagnostics and maintenance. 
+
+KPIs: end-to-end control-loop latency ≤ 20 ms, throughput ≥ 100 Mbps, 
+availability ≥ 99.999%, and packet loss ≤ 0.1%. 
