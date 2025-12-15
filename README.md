@@ -245,7 +245,7 @@ http://localhost:8004/process_error \
 }'
 ```
 
-## Demo1 (Updated Tue Nov 25 2025)
+## Demo1 (Updated Wed 3 Dec 2025, previously Tue Nov 25 2025)
 
 ### Step 1: Add sites to the Topology Module
 
@@ -270,7 +270,7 @@ curl -X 'POST' \
    -H 'Content-Type: application/json' \
    -d '{
    "site_id": "site1",
-   "cpu": 8,
+   "cpu": 16,
    "mem": 64,
    "storage": 2048,
    "iml_endpoint": "iml.siteid1.com"
@@ -281,7 +281,7 @@ curl -X 'POST' \
    -H 'Content-Type: application/json' \
    -d '{
    "site_id": "site2",
-   "cpu": 32,
+   "cpu": 24,
    "mem": 128,
    "storage": 3072,
    "iml_endpoint": "iml.siteid2.com"
@@ -299,13 +299,13 @@ curl -X 'GET' \
 
 ### Step 2: Upload Service Graph to Service Catalog
 
-Next, we need to upload [new_demo1_nsd.sg.yml](./demo/new_demo1_nsd.sg.yml) to the Service Catalog (delete and re-upload new):
+Next, we need to upload [arvrdemo-nsd.sg.yml](./demo/arvrdemo-nsd.sg.yml) to the Service Catalog (delete and re-upload new):
 
 ```bash
 SC_CATALOG="localhost:8001"
 curl -X 'POST' \
 "http://$SC_CATALOG/catalog/" \
--F "file=@demo/new_demo1_nsd.sg.yml"
+-F "file=@demo/arvrdemo-nsd.sg.yml"
 ```
 
 Verify the Service Graph has been uploaded:
@@ -322,21 +322,37 @@ Upload Applications to the Service Catalog.
 ```bash
 SC_CATALOG="localhost:8001"
 echo 'application-functions:
-  - instance-id: "app"
+  - instance-id: "edge"
     id: "iperf3"
-    name: "Pkt destination"
+    name: "AR edge app"
     version: "1.0"
-    node: "p42"
     domain: "external"
     static-nfids: [44,45]
-    static-macs: ["02:22:33:44:55:99"]
     static-ips: ["10.30.7.213"]
     is-scalable: true
     instances: 2
-    static-instance-ips: ["10.30.7.213", "10.30.7.214"]
-    static-instance-nodes: ["orin3", "ubuntu"]
     nf-vcpu: 10
-    nf-memory: 18
+    nf-memory: 16
+    nf-storage: 258
+  - instance-id: "src"
+    id: "iperf3"
+    name: "AR source app"
+    version: "1.0"
+    domain: "external"
+    is-ue: true
+    nf-vcpu: 4
+    nf-memory: 4
+    nf-storage: 16
+  - instance-id: "ran"
+    id: "iperf3"
+    name: "RAN"
+    version: "1.0"
+    domain: "internal"
+    is-ue: true
+    static-nfids: [42, 43]
+    static-ips: ["192.168.1.4"]
+    nf-vcpu: 10
+    nf-memory: 16
     nf-storage: 258' | curl -X POST \
 "http://$SC_CATALOG/catalog/" \
 -F "file=@-;filename=apps.nf.yaml"
@@ -360,5 +376,5 @@ SO_ENDPOINT="localhost:8000"
 curl -X 'POST' \
 "http://$SO_ENDPOINT/services" \
 -H 'Content-Type: application/json' \
--d '{"name": "new_demo1_nsd.sg.yml"}'
+-d '{"name": "arvrdemo-nsd.sg.yml"}'
 ```
