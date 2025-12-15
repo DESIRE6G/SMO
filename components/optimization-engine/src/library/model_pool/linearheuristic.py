@@ -205,8 +205,8 @@ def linearheuristic(service_request, apps, resources, service_graph, topology_gr
             for cp in link.get("connection-points", []):
                 if_id_ref = cp.get("if-id-ref", "")
                 # Replace ran:0 with src:0 for site2
-                if "ran:" in if_id_ref:
-                    if_id_ref = if_id_ref.replace("ran:", "src:")
+                #if "ran:" in if_id_ref:
+                #    if_id_ref = if_id_ref.replace("ran:", "src:")
                 link_copy["connection-points"].append({"if-id-ref": if_id_ref})
             fg_copy["links"].append(link_copy)
         site2_forwarding_graphs.append(fg_copy)

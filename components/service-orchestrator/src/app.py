@@ -85,8 +85,17 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
         # Also the b64 decode step is not needed at the moment.
         # file_like_object = BytesIO(base64.b64decode(response_content).decode().encode('utf-8'))
         #print(yaml_file_content)
+        i = 0
         for serv in response_content:
             site_id = serv['lnsd']['ns']['site-id']
+            #if i == 0 and site_id == 'site1':
+            #    site_id = 'site0'
+            #i = i + 1
+            #if site_id == 'site2':
+            #    continue
+            if site_id == 'site1':
+                serv['lnsd']['ns-instance-id'] = "55667788"
+
             # Check if the site exists in the topology component
             response = requests.get(f"{TOPOLOGY_MODULE_URL}/nodes/{site_id}")
             if response.status_code != 200:
@@ -111,28 +120,29 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
             try:
                 # The timeout tuple is set to (0.5, 10) seconds for connection and read timeouts respectively.
                 # TODO: When integrating with IML, we need to increase the connection timeout.
-                iml_response = requests.post(f"{iml_endpoint}/iml/yaml/deploy", files=files, timeout=(0.5, 10))
+                iml_response = requests.post(f"{iml_endpoint}/iml/yaml/deploy", files=files, timeout=(0.5, 30))
                 print(iml_response)
                 dir(iml_response)
                 print(iml_response.text)
                 # import pdb;pdb.set_trace()
 
-                json_data = iml_response.json()['response']
+                json_data = iml_response.json()
                 # Use a regular expression to find key-value pairs
                 #pattern = r'(\w+):\s*([^,}]+)'
                 #matches = re.findall(pattern, json_data)
 
                 # Convert the matches to a dictionary
-                #structured_dict = {key: value for key, value in matches}
+                structured_dict = json_data # {key: value for key, value in matches}
 
-                service_id = int(structured_dict["id"])
+                service_id = structured_dict["response"].split(" ")[5]
                 #service_id = str(site_id) + "SOMERANDOMID"
-                service_name = structured_dict["Deployed"]
-                #service_name = str(site_id) + "-service"
+                #service_name = structured_dict["Deployed"]
+                service_name = str(site_id) + "-service"
                 deployed_services[service_id] = {
                     "status": "deployed", "service_name": service_name, "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint}
 
-                return JSONResponse(content={"message": "Received", "data": iml_response.json(), "file": base64.b64decode(response_content).decode(), "site_id": site_id, "service_id": service_id })
+                #return JSONResponse(content={"message": "Received", "data": iml_response.json(), "file": base64.b64decode(response_content).decode(), "site_id": site_id, "service_id": service_id })
+                #return JSONResponse(content={"message": "Received", "data": iml_response.json(), "file": base64.b64decode(response_content).decode(), "site_id": site_id, "service_id": service_id })
                 #return JSONResponse(content={"message": "Received", "status": "deployed", "service_name": service_name,
                 #                             "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint})
             except requests.exceptions.RequestException as e:
