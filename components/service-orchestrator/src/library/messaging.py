@@ -135,7 +135,7 @@ class RabbitMQClient(MessageClient):
             queue = await self.channel.get_queue(self.final_topic)
             for _ in range(self.max_retries):
                 try:
-                    message = await queue.get(timeout=3)
+                    message = await queue.get(timeout=0.3)
                     if message:
                         await message.ack()
                         return message.body.decode()

@@ -10,6 +10,12 @@ from library.messaging import get_message_client
 import json
 import yaml
 import traceback
+import time
+import uuid
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 client = get_message_client()
 tags_metadata = [
@@ -44,6 +50,7 @@ SERVICE_CATALOG_URL = f"http://{os.getenv("SERVICE_CATALOG_HOST", "localhost")}:
 
 @app.post("/services", tags=["services"])
 async def deploy_service(service_request: ServiceRequest = Body(...)):
+    start1 = time.time()
     request_id = len(request_states) + 1
     request_states[request_id] = {
         "status": "processing", "input": {"name": service_request.name}, "output": None} # , "site_id": service_request.site_id
@@ -58,12 +65,16 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
         raise HTTPException(
             status_code=500, detail=f"Error downloading file from catalog")
 
-    await client.send_message(base64.b64encode(file_content.encode()))
+    end1 = time.time()
 
+    start2 = time.time()
+    await client.send_message(base64.b64encode(file_content.encode()))
     #iml_endpoint = "http://localhost:5000"  # Default value if not found
     #site_id = service_request.site_id
 
     response_content = await client.receive_message()
+    end2 = time.time()
+    start3 = time.time()
     response_content=interpret_message(response_content)
     if response_content:
         print(f"Received final message: {response_content}")
@@ -78,6 +89,7 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
             return JSONResponse(content={"message": "Failure in Optimization Engine", "status": "failed",
                                          "error": f"Optimization Engine failure: {response_content["Failed"]}"})
         yaml_file_content = yaml.dump(response_content).encode('utf-8')
+        end3 = time.time()
         
         content = list()
         # Convert the string content to a file-like object.
@@ -86,7 +98,9 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
         # file_like_object = BytesIO(base64.b64decode(response_content).decode().encode('utf-8'))
         #print(yaml_file_content)
         i = 0
+        timings = list()
         for serv in response_content:
+            start4 = time.time()
             site_id = serv['lnsd']['ns']['site-id']
             #if i == 0 and site_id == 'site1':
             #    site_id = 'site0'
@@ -108,10 +122,13 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
                 print("IML endpoint not found in the site dictionary, using default.")
                 iml_endpoint = "http://localhost:5000"  # Default value if not found
 
-            print("Deploying in ", site_id, iml_endpoint)
-            print("Service in YAML: ")
+            logger.info("Deploying in ", site_id, iml_endpoint)
+            end4 = time.time()
+            total4 = end4-start4
+            logger.info("Service in YAML: ")
+            start5 = time.time()
             serv_yaml = yaml.dump(serv).encode('utf-8')
-            print(serv_yaml)
+            logger.info(serv_yaml)
         
             file_like_object = BytesIO(serv_yaml)
             
@@ -140,6 +157,8 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
                 service_name = str(site_id) + "-service"
                 deployed_services[service_id] = {
                     "status": "deployed", "service_name": service_name, "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint}
+                end5 = time.time()
+                total5 = end5 - start5
 
                 #return JSONResponse(content={"message": "Received", "data": iml_response.json(), "file": base64.b64decode(response_content).decode(), "site_id": site_id, "service_id": service_id })
                 #return JSONResponse(content={"message": "Received", "data": iml_response.json(), "file": base64.b64decode(response_content).decode(), "site_id": site_id, "service_id": service_id })
@@ -152,13 +171,19 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
                 # Optional: print full traceback
                 traceback.print_exc()
                 request_states[request_id]["status"] = "failed"
+
                 return JSONResponse(content={"message": "Failed to deploy service to IML", "status": "failed",
                                          "service_name": service_request.name, "site_id": site_id,
                                          "iml_endpoint": iml_endpoint,
                                          "requested_service": response_content})
-            content.append({"message": "Received", "status": "deployed", "service_name": service_name,
+            timings.append({"site_retrieve": total4, "deploy": total5})
+            content.append({"message": "Received", "status": "deployed", "service_id": service_id, "service_name": service_name,
                 "file_name": file_name, "site_id": site_id, "iml_endpoint": iml_endpoint, "data": json.dumps(serv) })
-        return JSONResponse(content={'data': content})
+        total1 = end1-start1
+        total2 = end2-start2
+        total3 = end3-start3
+        measurements = {"sc": total1, "mq": total2, "OE": total3, "deploy": timings}
+        return JSONResponse(content={'data': content, 'measure': measurements})
     else:
         print("No final message received.")
         request_states[request_id]["status"] = "failed"
@@ -184,7 +209,7 @@ async def delete_service(service_id: str):
     iml_endpoint = deployed_services[service_id]["iml_endpoint"]
 
     # TODO: Check if the deletion was successful
-    response = requests.delete(f"{iml_endpoint}/{service_id}")
+    response = requests.delete(f"{iml_endpoint}/iml/yaml/deploy/{service_id}")
 
     # Remove the service from the deployed_services dictionary
     del deployed_services[service_id]
