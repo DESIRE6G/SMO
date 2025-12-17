@@ -70,7 +70,8 @@ async def consume_messages():
         channel = await connection.channel()
 
         # Declare queues and get the default exchange
-        input_queue = await channel.declare_queue(input_topic)
+        #input_queue = await channel.declare_queue(input_topic)
+        input_queue = await channel.declare_queue(input_topic, durable=True, exclusive=False, auto_delete=False)
         output_queue = await channel.declare_queue(output_topic)
         default_exchange = channel.default_exchange
 
@@ -82,10 +83,11 @@ async def consume_messages():
             modified_message = await process_message(message, message_counter)
             if modified_message:
                 await default_exchange.publish(
-                    Message(modified_message),
-                    routing_key=output_topic  # Provide the routing_key here
+                    Message(body=modified_message,correlation_id=message.correlation_id),
+                    routing_key=message.reply_to
                 )
                 # logger.info(f"Processed message {message_counter}: {message.body.decode()}")
+            await message.ack()    
 
         await input_queue.consume(on_message)
         logger.info("Waiting for messages to process. To exit, press CTRL+C")

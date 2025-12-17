@@ -17,7 +17,19 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-client = get_message_client()
+client = None
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: create connection for this worker
+    global client
+    client = get_message_client()
+    await client.connect()
+    yield
+    # Shutdown: close connection
+    await client.close()
+
 tags_metadata = [
     {
         "name": "services",
@@ -28,7 +40,8 @@ tags_metadata = [
         "description": "Request management endpoints",
     },
 ]
-app = FastAPI(openapi_tags=tags_metadata)
+#app = FastAPI(openapi_tags=tags_metadata)
+app = FastAPI(lifespan=lifespan, openapi_tags=tags_metadata)
 
 
 class ServiceRequest(BaseModel):
@@ -68,11 +81,13 @@ async def deploy_service(service_request: ServiceRequest = Body(...)):
     end1 = time.time()
 
     start2 = time.time()
-    await client.send_message(base64.b64encode(file_content.encode()))
+    #await client.send_message(base64.b64encode(file_content.encode()))
+    response_content = await client.call_oe(base64.b64encode(file_content.encode()))
+
     #iml_endpoint = "http://localhost:5000"  # Default value if not found
     #site_id = service_request.site_id
 
-    response_content = await client.receive_message()
+    #response_content = await client.receive_message()
     end2 = time.time()
     start3 = time.time()
     response_content=interpret_message(response_content)
