@@ -22,15 +22,16 @@ def clear_screen():
 async def process_message(message: IncomingMessage, message_counter):
     try:
 
+        message_counter = message_counter + 1
         body = message.body.decode('utf-8')
         body = base64.b64decode(body).decode('utf-8')
         parsed_yaml = yaml.safe_load(body)
         # clear_screen()
         # logger.info(f"Processing message {message_counter}...")
         logger.info("Received service optimization request number:" + str(message_counter) + ", with ns instance id:" + parsed_yaml["lnsd"]["ns-instance-id"]) # parsed_yaml["local-nsd"]["info"]["ns"]["id"])
-        logger.info("---parsed_yaml---")
-        logger.info(parsed_yaml)
-        logger.info("---parsed_yaml---")
+        #logger.info("---parsed_yaml---")
+        #logger.info(parsed_yaml)
+        #logger.info("---parsed_yaml---")
 
         #modified_message = f"Processed: {base64.b64decode(message.body).decode()}"
         # modified_message = message.body
@@ -70,29 +71,30 @@ async def consume_messages():
         await channel.set_qos(prefetch_count=1)
 
         # Declare queues and get the default exchange
-        input_queue = await channel.declare_queue(input_topic, durable=True,exclusive=False, auto_delete=False)
+        input_queue = await channel.declare_queue(input_topic, durable=True, exclusive=False, auto_delete=False)
         output_queue = await channel.declare_queue(output_topic)
         default_exchange = channel.default_exchange
 
         message_counter = 0  # Initialize message counter here
 
         async def on_message(message: IncomingMessage):
-            nonlocal message_counter  # Use nonlocal to modify the outer variable
-            message_counter += 1
+            logger.info(f"Got message: {message.correlation_id}, {str(message.reply_to)}")
             modified_message = await process_message(message, message_counter)
-            # Manually acknowledge the message
-            await message.ack()
             if modified_message:
                 await default_exchange.publish(
-                    Message(modified_message),
-                    routing_key=output_topic  # Provide the routing_key here
+                    Message(
+                        body=modified_message,
+                        correlation_id=message.correlation_id
+                    ),
+                    routing_key=message.reply_to
                 )
-                # logger.info(f"Processed message {message_counter}: {message.body.decode()}")
+            await message.ack()
 
         await input_queue.consume(on_message, no_ack=False)
         logger.info("Waiting for messages to process. To exit, press CTRL+C")
-
         return connection
     except Exception as e:
         logger.error(f"Error in consuming messages: {str(e)}")
         raise  # Reraise the exception to propagate it up the call stack
+
+

@@ -1,0 +1,64 @@
+lnsd:
+  ns-instance-id: "11223344-e2a8-4338-bc8c-be685548bad3"
+  ns:
+    name: "ARVRDemo"
+    id: "418420e3-e2a8-4338-bc8c-be685548bad3"
+    vendor: "D6G"
+    descriptor-version: "1.0"
+    application-functions:
+      - af-instance-id: "ar-source-app-i01"
+        af-id: "ar-source-app"
+        af-name: "AR source app"
+        af-version: "1.0"
+        af-mgmt-network: "shared-mgmt-net"
+      - af-instance-id: "ar-edge-app-i01"
+        af-id: "ar-edge-app"
+        af-name: "AR Edge app"
+        af-version: "1.0"
+        af-mgmt-network: "shared-mgmt-net"
+    mas-agent:
+      - instance-id: "mas-site1-001"
+        id: "mas1_1"
+        name: "service_mas1_1"
+        version: "v1.0"
+      - instance-id: "mas-site2-001"
+        id: "mas2_1"
+        name: "service_mas2_1"
+        version: "v1.0"
+    site-connections:
+      - site-connection-id: "sc0-sc1"
+        site-id-ref: "d6g-001"
+      - site-connection-id: "sc1-sc2"
+        site-id-ref: "d6g-002"
+      - site-connection-id: "sc0-sc1"
+        site-id-ref: "d6g-000"
+      - site-connection-id: "sc2-sc1"
+        site-id-ref: "d6g-001"
+    forwarding_graphs:
+      - member-graph-index: 1 # list of subgraphs/forwarding segments implemented by the given D6G site
+        graph-name: "uplink"
+        links:
+          - id: "input-1"
+            connection-points:
+            - member-connection-point-index: 1
+              member-if-id-ref: "ar-source-app-i01:output"
+            - member-connection-point-index: 2
+              member-if-id-ref: "sc0-sc1:input"
+      - member-graph-index: 1 # list of subgraphs/forwarding segments implemented by the given D6G site
+        graph-name: "uplink"
+        links:
+          - id: "transit"
+            connection-points:
+            - member-connection-point-index: 1
+              member-if-id-ref: "sc0-sc1:input" #this is aftre the core network interface.
+            - member-connection-point-index: 2
+              member-if-id-ref: "sc1-sc2:output"
+      - member-graph-index: 1 # list of subgraphs/forwarding segments implemented by the given D6G site
+        graph-name: "uplink"
+        links:
+          - id: "to_app" #to check if SAP to be defined
+            connection-points:
+            - member-connection-point-index: 1
+              member-if-id-ref: "sc2-sc1:input"
+            - member-connection-point-index: 2
+              member-if-id-ref: "ar-edge-app-i01:input"

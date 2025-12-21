@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 def linearheuristic(service_request, apps, resources, service_graph, topology_graph, domains):
 
     # Check delete after testing
-    logger.info("service_request: " + str(service_request))
-    logger.info("apps: " + str(apps))
-    logger.info("resources: " + str(resources))
-    logger.info("service_graph: " + str(service_graph))
-    logger.info("topology_graph: " + str(topology_graph))
-    logger.info("domains: " + str(domains))
+    #logger.info("service_request: " + str(service_request))
+    #logger.info("apps: " + str(apps))
+    #logger.info("resources: " + str(resources))
+    #logger.info("service_graph: " + str(service_graph))
+    #logger.info("topology_graph: " + str(topology_graph))
+    #logger.info("domains: " + str(domains))
 
     # SERVICE DECORATIONS MOD
     
@@ -38,12 +38,12 @@ def linearheuristic(service_request, apps, resources, service_graph, topology_gr
     vendor = str(service_request_dict.get("lnsd", {}).get("ns", {}).get("vendor", "Not found"))
     version = str(service_request_dict.get("lnsd", {}).get("ns", {}).get("descriptor-version", "Not found"))
 
-    logger.info("----")
+    #logger.info("----")
 
     # LINEAR HEURISTIC PARTITIONING
     for domain in range(0, domains):
 
-        logger.info("RUN START: " + str(domain))
+        #logger.info("RUN START: " + str(domain))
 
         # DRONE SITE DOMAIN EDGE
         site_id0 = resources[0].get("site-resources", [])[0].get("site-id-ref", "Not found") if len(resources) > 0 and len(resources[0].get("site-resources", [])) > 0 else "Not found" # site_id0 = "d6g-000" # Update to fetch dynamically from topology
@@ -52,11 +52,11 @@ def linearheuristic(service_request, apps, resources, service_graph, topology_gr
         fg_1 = service_request_dict.get("lnsd", {}).get("ns", {}).get("forwarding_graphs", [])[0] if len(service_request_dict.get("lnsd", {}).get("ns", {}).get("forwarding_graphs", [])) > 0 else "Not found" # load fg-1 for drone
         delay_budget_site0 = {"e2e_delay_budget": "5ms"} # set e2e_delay_budget 5ms for drone
 
-        logger.info("site_id0: " + str(site_id0))
-        logger.info("first_app: " + str(first_app))
-        logger.info("sc_1: " + str(sc_1))
-        logger.info("fg_1: " + str(fg_1))
-        logger.info("delay_budget_site0: " + str(delay_budget_site0))
+        #logger.info("site_id0: " + str(site_id0))
+        #logger.info("first_app: " + str(first_app))
+        #logger.info("sc_1: " + str(sc_1))
+        #logger.info("fg_1: " + str(fg_1))
+        #logger.info("delay_budget_site0: " + str(delay_budget_site0))
 
         # DOMAIN CORE
         site_id1 = resources[1].get("site-resources", [])[0].get("site-id-ref", "Not found") if len(resources) > 1 and len(resources[1].get("site-resources", [])) > 0 else "Not found" # site_id1 = "d6g-001" # Update to fetch dynamically from topology
@@ -67,12 +67,12 @@ def linearheuristic(service_request, apps, resources, service_graph, topology_gr
         fg_2 = service_request_dict.get("lnsd", {}).get("ns", {}).get("forwarding_graphs", [])[1] if len(service_request_dict.get("lnsd", {}).get("ns", {}).get("forwarding_graphs", [])) > 0 else "Not found" # load fg-2
         delay_budget_site1 = {"e2e_delay_budget": "15ms"} # set e2e_delay_budget 15ms for drone
 
-        logger.info("site_id1: " + str(site_id1))
-        logger.info("mas_agent_site1: " + str(mas_agent_site1))
-        logger.info("sc_2: " + str(sc_2))
-        logger.info("sc_3: " + str(sc_3))
-        logger.info("fg_2: " + str(fg_2))
-        logger.info("delay_budget_site1: " + str(delay_budget_site1))
+        #logger.info("site_id1: " + str(site_id1))
+        #logger.info("mas_agent_site1: " + str(mas_agent_site1))
+        #logger.info("sc_2: " + str(sc_2))
+        #logger.info("sc_3: " + str(sc_3))
+        #logger.info("fg_2: " + str(fg_2))
+        #logger.info("delay_budget_site1: " + str(delay_budget_site1))
 
         # DOMAIN REMOTE
         site_id2 = resources[2].get("site-resources", [])[0].get("site-id-ref", "Not found") if len(resources) > 2 and len(resources[2].get("site-resources", [])) > 0 else "Not found" # site_id2 = "d6g-002" # Update to fetch dynamically from topology
@@ -84,16 +84,16 @@ def linearheuristic(service_request, apps, resources, service_graph, topology_gr
         fg_3 = service_request_dict.get("lnsd", {}).get("ns", {}).get("forwarding_graphs", [])[2] if len(service_request_dict.get("lnsd", {}).get("ns", {}).get("forwarding_graphs", [])) > 0 else "Not found" # load fg-3
         delay_budget_site2 = {"e2e_delay_budget": "5ms"} # set e2e_delay_budget 5ms
         
-        logger.info("site_id2: " + str(site_id2))
-        logger.info("second_app: " + str(second_app))
-        logger.info("mas_agent_site2: " + str(mas_agent_site2))
-        logger.info("sc_4: " + str(sc_4))
-        logger.info("fg_3: " + str(fg_3))
-        logger.info("delay_budget_site2: " + str(delay_budget_site2))
+        #logger.info("site_id2: " + str(site_id2))
+        #logger.info("second_app: " + str(second_app))
+        #logger.info("mas_agent_site2: " + str(mas_agent_site2))
+        #logger.info("sc_4: " + str(sc_4))
+        #logger.info("fg_3: " + str(fg_3))
+        #logger.info("delay_budget_site2: " + str(delay_budget_site2))
 
-        logger.info("RUN END: " + str(domain))
+        #logger.info("RUN END: " + str(domain))
     
-    logger.info("----")
+    #logger.info("----")
 
     # SERVICEGEN
     partitions = []
@@ -156,6 +156,6 @@ def linearheuristic(service_request, apps, resources, service_graph, topology_gr
     }
     partitions.append(partition_2)
     
-    logger.info("Generated " + str(len(partitions)) + " partitions")
+    #logger.info("Generated " + str(len(partitions)) + " partitions")
     
     return partitions

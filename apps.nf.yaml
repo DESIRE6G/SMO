@@ -1,0 +1,11 @@
+name: apps
+data:
+  application-functions:
+    - af-instance-id: ar-edge-app-i01
+      nf-vcpu: 2
+      nf-memory: 5
+      nf-storage: 25
+    - af-instance-id: ar-source-app-i01
+      nf-vcpu: 10
+      nf-memory: 18
+      nf-storage: 258

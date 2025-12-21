@@ -3,9 +3,16 @@ from kafka import KafkaProducer, KafkaConsumer
 from kafka.errors import KafkaError
 from typing import Optional
 import asyncio
-from aio_pika import connect_robust, Message
+#from aio_pika import connect_robust, Message
+from aio_pika import connect_robust, connect, IncomingMessage, ExchangeType, Message
 from aio_pika.exceptions import QueueEmpty, AMQPConnectionError
 import os
+import uuid
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 
 class MessageClient(ABC):
@@ -89,8 +96,7 @@ class KafkaClient(MessageClient):
             print("Error receiving message:", e)
 
 
-class RabbitMQClient(MessageClient):
-
+class RabbitMQClient:
     def __init__(self, rabbitmq_host: str, input_topic: str, final_topic: str, max_retries: int):
         self.rabbitmq_host = rabbitmq_host
         self.input_topic = input_topic
@@ -98,7 +104,11 @@ class RabbitMQClient(MessageClient):
         self.channel = None
         self.connection = None
         self.max_retries = max_retries
-        print("input_topic: %s, output_topic:%s, rabbitmqhost=%s " %
+        self.channel = None
+        self.reply_queue = None  # ← CREATE ONCE
+        self.futures = {}
+        self.consumer_tag = None
+        logger.info("input_topic: %s, output_topic:%s, rabbitmqhost=%s " %
               (input_topic, final_topic, rabbitmq_host))
 
     async def connect(self):
@@ -107,44 +117,51 @@ class RabbitMQClient(MessageClient):
             self.channel = await self.connection.channel()
             await self.channel.declare_queue(self.input_topic,durable=True,exclusive=False, auto_delete=False)
             await self.channel.declare_queue(self.final_topic)
+
+            # Create reply queue ONCE per worker
+            self.reply_queue = await self.channel.declare_queue(
+                exclusive=True,
+                auto_delete=True
+            )
+
+            # Start consumer ONCE
+            self.consumer_tag = await self.reply_queue.consume(self._on_response)
+            logger.info(f"Worker {os.getpid()} created reply queue: {self.reply_queue.name}")  # ← Should see this ONCE per worker
+
         except AMQPConnectionError as e:
-            print(f"Error connecting to RabbitMQ: {e}")
+            logger.error(f"Error connecting to RabbitMQ: {e}")
 
-    async def send_message(self, message: bytes):
+    async def _on_response(self, msg: IncomingMessage):
+        """Central handler for ALL responses"""
+        future = self.futures.pop(msg.correlation_id, None)
+        if future and not future.done():
+            future.set_result(msg.body)
+        await msg.ack()
+
+    async def call_oe(self, message: bytes, timeout=5):
+        if self.reply_queue is None:
+            await self.connect()
+
+        correlation_id = str(uuid.uuid4())
+        future = asyncio.get_event_loop().create_future()
+        self.futures[correlation_id] = future
+
+        logger.info(f"correlation_id: {correlation_id}")
+        # DO NOT LOG reply_queue here - it's always the same!
+
         try:
-            if self.channel is None or self.connection is None:
-                await self.connect()
-            if self.channel is None:
-                raise AMQPConnectionError("Channel is not connected")
-
             await self.channel.default_exchange.publish(
-                Message(body=message),
+                Message(
+                    body=message,
+                    correlation_id=correlation_id,
+                    reply_to=self.reply_queue.name  # ← REUSE same queue
+                ),
                 routing_key=self.input_topic
             )
-        except AMQPConnectionError as e:
-            print(f"Error sending message: {e}")
 
-    async def receive_message(self) -> str | None:
-        try:
-            if self.channel is None or self.connection is None:
-                await self.connect()
+            return await asyncio.wait_for(future, timeout=timeout)
+        except asyncio.TimeoutError:
+            self.futures.pop(correlation_id, None)
+            raise
 
-            if self.channel is None:
-                raise AMQPConnectionError("Channel is not connected")
 
-            queue = await self.channel.get_queue(self.final_topic)
-            for _ in range(self.max_retries):
-                try:
-                    message = await queue.get(timeout=1)
-                    if message:
-                        await message.ack()
-                        return message.body.decode()
-                except QueueEmpty:
-                    print("No message yet available in the queue.")
-                    # Wait for 3 seconds before retrying
-                    #await asyncio.sleep(0.5)
-                    pass
-            print("No message available after retrying.")
-            return None
-        except AMQPConnectionError as e:
-            print(f"Error receiving message: {e}")
